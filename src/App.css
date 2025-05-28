@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@layer base {
+  html {
+    font-family: "Montserrat", system-ui, sans-serif;
+  }
+}
+
+@plugin "daisyui";
+
+@plugin "daisyui/theme" {
+  name: "gob_estatal";
+  default: true;
+  prefersdark: false;
+  color-scheme: "light";
+  --color-base-100: oklch(100% 0 0);
+  --color-base-200: oklch(98% 0 0);
+  --color-base-300: oklch(95% 0 0);
+  --color-base-content: oklch(14% 0.005 285.823);
+  --color-primary: #9f2241;
+  --color-primary-content: oklch(100% 0 0);
+  --color-secondary: #235b4e;
+  --color-secondary-content: oklch(100% 0 0);
+  --color-accent: #691c32;
+  --color-accent-content: oklch(100% 0 0);
+  --color-neutral: #ddc9a3;
+  --color-neutral-content: oklch(0% 0 0);
+  --color-info: #98989a;
+  --color-info-content: oklch(100% 0 0);
+  --color-success: oklch(52% 0.154 150.069);
+  --color-success-content: oklch(100% 0 0);
+  --color-warning: oklch(82% 0.189 84.429);
+  --color-warning-content: oklch(41% 0.112 45.904);
+  --color-error: oklch(50% 0.213 27.518);
+  --color-error-content: oklch(100% 0 0);
+  --radius-selector: 0.5rem;
+  --radius-field: 0.5rem;
+  --radius-box: 1rem;
+  --size-selector: 0.21875rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 1;
+  --noise: 0;
+}
