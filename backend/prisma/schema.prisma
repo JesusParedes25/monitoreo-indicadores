@@ -1,0 +1,20 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Definición del modelo para la tabla municipios_indicadores
+model municipios_indicadores {
+  id        Int       @id @default(autoincrement())
+  municipio String?   @db.VarChar(254)
+  enlace    Boolean?
+  pamr      Boolean?
+  cnartys   Boolean?
+  cvegeo    String?   @db.VarChar(11)
+  // No podemos modelar directamente el campo geom de tipo geometry en Prisma
+  // Se trabajará con ello a nivel de consultas SQL directas o al hacer join con GeoJSON
+}

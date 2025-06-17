@@ -1,9 +1,28 @@
+import React from 'react';
+import MapaMunicipios from './MapaMunicipios';
+
 export default function MunicipiosSection() {
   return (
-    <section id="municipios" className="py-16 px-6 bg-base-100">
-      <h2 className="text-3xl font-bold mb-8 text-center">Avance por Municipios</h2>
-      {/* Aquí puedes agregar un mapa, gráficos o tarjetas */}
-      <p className="text-center text-base-content/70">Resumen del avance en los 84 municipios de Hidalgo.</p>
-    </section>
+    <div className="w-full bg-gray-100 px-4 py-8">
+      <div className="container mx-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-3xl font-bold">Avance por Municipios</h2>
+          <div className="text-sm text-gray-500">
+            Actualizado: {new Date().toLocaleDateString()}
+          </div>
+        </div>
+        
+        {/* Dashboard principal */}
+        <div className="bg-white rounded-xl shadow-xl overflow-hidden">
+          <div className="p-4 lg:p-6">
+            <MapaMunicipios />
+          </div>
+        </div>
+        
+        <div className="text-center text-sm text-gray-500 mt-4">
+          Haz clic en cada municipio para ver más detalles. Los datos se obtienen en tiempo real desde la base de datos.
+        </div>
+      </div>
+    </div>
   );
 }

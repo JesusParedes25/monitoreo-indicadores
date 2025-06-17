@@ -1,3 +1,4 @@
 @import "tailwindcss";
 @plugin "daisyui";
 
+/* El CSS de Leaflet se carga desde el CDN en index.html */

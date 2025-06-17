@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import Layout from "./components/Layout";
 import Hero from "./components/Hero";
-
-
+import MunicipiosSection from "./components/municipios/MunicipiosSection";
 import ThemeToggle from "./components/ThemeToggle";
-import "./app.css";  // Asegúrate que el nombre y ruta coincidan
+import "./app.css";  
 
 export default function App() {
 
@@ -18,6 +17,7 @@ export default function App() {
     <div>
       <Layout>
         <Hero />
+        <MunicipiosSection />
       </Layout>
     </div>
   );
