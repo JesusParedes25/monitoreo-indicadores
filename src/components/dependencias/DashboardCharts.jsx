@@ -322,16 +322,68 @@ const DashboardCharts = ({ tramites, secretarias, estadisticasGenerales }) => {
     },
   };
 
+  // Usar estilos en línea directos para mayor control
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-      <div className="bg-white p-3 rounded-lg shadow-sm border" style={{ borderColor: COLORS.mediumGray, height: '300px' }}>
-        <Radar data={datosRadarAvance} options={opcionesRadar} />
+    <div style={{ marginBottom: '1.5rem' }}>
+      {/* Primera fila: 2 gráficos */}
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: 'row', 
+        flexWrap: 'wrap', 
+        gap: '16px', 
+        marginBottom: '16px'
+      }}>
+        {/* Primer gráfico */}
+        <div style={{
+          backgroundColor: COLORS.white,
+          padding: '12px',
+          borderRadius: '8px',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+          border: `1px solid ${COLORS.mediumGray}`,
+          width: 'calc(50% - 8px)',
+          height: '300px',
+          flexGrow: 1,
+          flexBasis: '400px',
+          minWidth: '0'
+        }}>
+          <Radar data={datosRadarAvance} options={opcionesRadar} />
+        </div>
+        
+        {/* Segundo gráfico */}
+        <div style={{
+          backgroundColor: COLORS.white,
+          padding: '12px',
+          borderRadius: '8px',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+          border: `1px solid ${COLORS.mediumGray}`,
+          width: 'calc(50% - 8px)',
+          height: '300px',
+          flexGrow: 1,
+          flexBasis: '400px',
+          minWidth: '0'
+        }}>
+          <Doughnut data={datosNivelDigitalizacion} options={opcionesDoughnut} />
+        </div>
       </div>
-      <div className="bg-white p-3 rounded-lg shadow-sm border" style={{ borderColor: COLORS.mediumGray, height: '300px' }}>
-        <Doughnut data={datosNivelDigitalizacion} options={opcionesDoughnut} />
-      </div>
-      <div className="bg-white p-3 rounded-lg shadow-sm border" style={{ borderColor: COLORS.mediumGray, height: '300px' }}>
-        <Bar data={datosAvanceTramites} options={opcionesBar} />
+      
+      {/* Segunda fila: 1 gráfico */}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        width: '100%' 
+      }}>
+        <div style={{
+          backgroundColor: COLORS.white,
+          padding: '12px',
+          borderRadius: '8px',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+          border: `1px solid ${COLORS.mediumGray}`,
+          width: '75%',
+          height: '300px',
+          minWidth: '0'
+        }}>
+          <Bar data={datosAvanceTramites} options={opcionesBar} />
+        </div>
       </div>
     </div>
   );
