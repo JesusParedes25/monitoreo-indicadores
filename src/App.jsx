@@ -1,8 +1,10 @@
 import React, { useEffect } from "react";
-import Layout from "./components/Layout";
-import Hero from "./components/Hero";
-import MunicipiosSection from "./components/municipios/MunicipiosSection";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import ThemeToggle from "./components/ThemeToggle";
+import HomePage from "./pages/HomePage";
+import MunicipiosPage from "./pages/MunicipiosPage";
+import DependenciasPage from "./pages/DependenciasPage";
+import ContactoPage from "./pages/ContactoPage";
 import "./app.css";  
 
 export default function App() {
@@ -14,11 +16,15 @@ export default function App() {
 
 
   return (
-    <div>
-      <Layout>
-        <Hero />
-        <MunicipiosSection />
-      </Layout>
-    </div>
+    <Router>
+      <div>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/municipios" element={<MunicipiosPage />} />
+          <Route path="/dependencias" element={<DependenciasPage />} />
+          <Route path="/contacto" element={<ContactoPage />} />
+        </Routes>
+      </div>
+    </Router>
   );
 }

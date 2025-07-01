@@ -18,3 +18,30 @@ model municipios_indicadores {
   // No podemos modelar directamente el campo geom de tipo geometry en Prisma
   // Se trabajará con ello a nivel de consultas SQL directas o al hacer join con GeoJSON
 }
+
+// Definición del modelo para la tabla secretaria
+model secretaria {
+  id                        Int                         @id @default(autoincrement())
+  nombre                    String                       @unique
+  indicadores_tramite       indicadores_tramite_secretaria[]
+}
+
+// Definición del modelo para la tabla indicadores_tramite_secretaria
+model indicadores_tramite_secretaria {
+  id                        Int                         @id @default(autoincrement())
+  secretaria_id             Int
+  tramite                   String
+  nivel_digitalizacion      Float?
+  capacitacion_modulo1      Boolean?
+  boceto_modelado           Boolean?
+  bizagi_modelado           Boolean?
+  vo_bo_bizagi              Boolean?
+  capacitacion_modulo2      Boolean?
+  acciones_reingenieria     Boolean?
+  vo_bo_acciones_reingenieria Boolean?
+  capacitacion_modulo3      Boolean?
+  boceto_acuerdo            Boolean?
+  vo_bo_acuerdo             Boolean?
+  publicado                 Boolean?
+  secretaria                secretaria                  @relation(fields: [secretaria_id], references: [id])
+}

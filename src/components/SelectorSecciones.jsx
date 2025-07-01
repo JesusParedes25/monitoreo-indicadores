@@ -1,14 +1,15 @@
 // src/components/SelectorSecciones.jsx
 import React from "react";
 import { ArrowRightIcon } from "@heroicons/react/24/solid";
+import { Link } from "react-router-dom";
 
 export default function SelectorSecciones() {
   return (
     <section className="w-full py-12 px-6">
       <div className="max-w-7xl mx-auto flex gap-12 justify-center bg-white/30 rounded-lg p-6">
         {/* Card Municipios */}
-        <a
-          href="#municipios"
+        <Link
+          to="/municipios"
           className="relative flex-shrink-0 snap-start w-[480px] rounded-lg shadow-lg overflow-hidden cursor-pointer group transition-transform hover:scale-[1.0] bg-primary"
           aria-label="Ir a sección Municipios"
         >
@@ -30,11 +31,11 @@ export default function SelectorSecciones() {
               <ArrowRightIcon className="w-5 h-5" />
             </div>
           </div>
-        </a>
+        </Link>
 
         {/* Card Dependencias */}
-        <a
-          href="#dependencias"
+        <Link
+          to="/dependencias"
           className="relative flex-shrink-0 snap-start w-[480px] rounded-lg shadow-lg overflow-hidden cursor-pointer group transition-transform hover:scale-[1.0] bg-secondary"
           aria-label="Ir a sección Dependencias"
         >
@@ -56,7 +57,7 @@ export default function SelectorSecciones() {
               <ArrowRightIcon className="w-5 h-5" />
             </div>
           </div>
-        </a>
+        </Link>
       </div>
     </section>
   );

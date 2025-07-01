@@ -1,5 +1,6 @@
 // src/components/Layout.jsx
 import React from "react";
+import { Link } from "react-router-dom";
 import ThemeToggle from "./ThemeToggle";
 
 export default function Layout({ children }) {
@@ -8,18 +9,18 @@ export default function Layout({ children }) {
       {/* Navbar */}
       <header className="navbar bg-primary text-primary-content px-8">
         <div className="flex-1">
-          <a className="btn btn-ghost normal-case text-xl">Monitoreo Hidalgo</a>
+          <Link to="/" className="btn btn-ghost normal-case text-xl">Monitoreo Hidalgo</Link>
         </div>
         <div className="flex-none gap-2 items-center flex">
-          <a href="#municipios" className="btn btn-ghost btn-sm">
+          <Link to="/municipios" className="btn btn-ghost btn-sm">
             Municipios
-          </a>
-          <a href="#dependencias" className="btn btn-ghost btn-sm">
+          </Link>
+          <Link to="/dependencias" className="btn btn-ghost btn-sm">
             Dependencias
-          </a>
-          <a href="#contacto" className="btn btn-ghost btn-sm">
+          </Link>
+          <Link to="/contacto" className="btn btn-ghost btn-sm">
             Contacto
-          </a>
+          </Link>
           {/* Botón toggle modo oscuro */}
           <ThemeToggle />
         </div>
