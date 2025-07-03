@@ -16,7 +16,6 @@ COPY public ./public
 # Copiar archivos de configuración si existen
 COPY vite.config.js* ./
 COPY tailwind.config.js* ./
-COPY postcss.config.js* ./
 
 # Configurar la URL del backend
 RUN echo "VITE_API_URL=http://srv885729.hstgr.cloud/api" > .env.production
