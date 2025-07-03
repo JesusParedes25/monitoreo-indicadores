@@ -10,8 +10,6 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Gob13rnoDB$
       POSTGRES_DB: observatorio_regulatorio
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./postgres-init:/docker-entrypoint-initdb.d
@@ -31,8 +29,6 @@ services:
       DATABASE_URL: postgresql://postgres:Gob13rnoDB$@postgres:5432/observatorio_regulatorio
       NODE_ENV: production
       PORT: 3000
-    ports:
-      - "3000:3000"
     networks:
       - observatorio_network
 
@@ -47,8 +43,6 @@ services:
       - backend
     ports:
       - "80:80"
-    environment:
-      - VIRTUAL_HOST=srv885729.hstgr.cloud
     networks:
       - observatorio_network
 

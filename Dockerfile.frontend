@@ -1,19 +1,15 @@
-FROM node:18-alpine as build
+FROM node:16-alpine as build
 
 WORKDIR /app
 
-# Copiar archivos de dependencias
-COPY package*.json ./
-COPY vite.config.js ./
-
-# Instalar dependencias
-RUN npm install
-
-# Copiar el resto del código fuente
+# Copiar todo el código fuente primero
 COPY . .
 
 # Configurar la URL del backend para producción
 RUN echo "VITE_API_URL=http://srv885729.hstgr.cloud/api" > .env.production
+
+# Instalar dependencias
+RUN npm install
 
 # Construir la aplicación
 RUN npm run build
