@@ -1,30 +1,39 @@
-FROM node:16-alpine as build
-
-WORKDIR /app
-
-# Copiar todo el código fuente primero
-COPY . .
-
-# Configurar la URL del backend para producción
-RUN echo "VITE_API_URL=http://srv885729.hstgr.cloud/api" > .env.production
-
-# Instalar dependencias
-RUN npm install
-
-# Construir la aplicación
-RUN npm run build
-
-# Etapa de producción
+# Usar una imagen base de nginx directamente
 FROM nginx:alpine
 
-# Copiar la configuración de nginx
-COPY ./nginx/nginx.conf /etc/nginx/conf.d/default.conf
+# Crear directorio temporal para construcción
+WORKDIR /tmp
 
-# Copiar los archivos construidos desde la etapa anterior
-COPY --from=build /app/dist /usr/share/nginx/html
+# Instalar Node.js en la imagen nginx
+RUN apk add --no-cache nodejs npm
 
-# Exponer el puerto
+# Copiar archivos del proyecto
+COPY package*.json ./
+COPY vite.config.js ./
+COPY index.html ./
+COPY src ./src
+COPY public ./public
+COPY tailwind.config.js ./
+COPY postcss.config.js ./
+
+# Configurar la URL del backend
+RUN echo "VITE_API_URL=http://srv885729.hstgr.cloud/api" > .env.production
+
+# Instalar dependencias y construir
+RUN npm install --legacy-peer-deps
+RUN npm run build
+
+# Copiar archivos construidos a nginx
+RUN cp -r dist/* /usr/share/nginx/html/
+
+# Limpiar archivos temporales
+RUN rm -rf /tmp/*
+
+# Copiar configuración de nginx
+COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
+
+# Exponer puerto 80
 EXPOSE 80
 
-# Iniciar nginx
+# Comando para ejecutar nginx
 CMD ["nginx", "-g", "daemon off;"]
