@@ -3,7 +3,7 @@ version: '3.8'
 services:
   # Servicio de base de datos PostgreSQL
   postgres:
-    image: postgres:15
+    image: postgis/postgis:15-3.3
     container_name: observatorio_postgres
     restart: always
     environment:
