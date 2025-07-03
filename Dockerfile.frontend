@@ -9,12 +9,14 @@ RUN apk add --no-cache nodejs npm
 
 # Copiar archivos del proyecto
 COPY package*.json ./
-COPY vite.config.js ./
 COPY index.html ./
 COPY src ./src
 COPY public ./public
-COPY tailwind.config.js ./
-COPY postcss.config.js ./
+
+# Copiar archivos de configuración si existen
+COPY vite.config.js* ./
+COPY tailwind.config.js* ./
+COPY postcss.config.js* ./
 
 # Configurar la URL del backend
 RUN echo "VITE_API_URL=http://srv885729.hstgr.cloud/api" > .env.production
