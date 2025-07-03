@@ -17,9 +17,43 @@ const DashboardSecretarias = () => {
   const [searchTerm, setSearchTerm] = useState('');
   
   // Constante para el total estatal de trámites
-  const TOTAL_TRAMITES_ESTATALES = 900;
+  const TOTAL_TRAMITES_ESTATALES = 229;
+  
+  // Totales de trámites por secretaría (cantidades correctas)
+  const TOTAL_TRAMITES_POR_SECRETARIA = {
+    // Mapeo de ID de secretaría a total de trámites
+    // Estos valores son los proporcionados por el usuario
+    2: 8,  // PROCURADURIA GENERAL DE JUSTICIA - 8 trámites en total (5 en proceso)
+    3: 11, // SECRETARIA DE CONTRALORÍA - 11 trámites en total
+    4: 34, // SECRETARÍA DE MEDIO AMBIENTE Y RECURSOS NATURALES - 34 trámites en total
+    1: 8,  // SECRETARÍA DE SEGURIDAD PÚBLICA - 8 trámites en total
+    // Añadir más secretarías según sea necesario
+  };
 
   // Cargar datos de trámites y secretarías
+  // Exponer la función para mostrar una secretaría específica
+  useEffect(() => {
+    // Exponer la función para que pueda ser llamada desde otros componentes
+    if (typeof window !== 'undefined') {
+      window.DashboardSecretarias = window.DashboardSecretarias || {};
+      window.DashboardSecretarias.mostrarSecretaria = (secretariaId) => {
+        const secretariaSeleccionada = secretarias.find(s => s.id === secretariaId);
+        if (secretariaSeleccionada) {
+          setSelectedSecretaria(secretariaSeleccionada);
+          // Desplazar al inicio de la página
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      };
+    }
+    
+    return () => {
+      // Limpiar cuando el componente se desmonte
+      if (typeof window !== 'undefined' && window.DashboardSecretarias) {
+        delete window.DashboardSecretarias.mostrarSecretaria;
+      }
+    };
+  }, [secretarias]);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -68,7 +102,8 @@ const DashboardSecretarias = () => {
         totalTramites: 0,
         tramitesEnProceso: 0,
         secretariasActivas: 0,
-        nivelDigitalizacionPromedio: 0
+        nivelDigitalizacionPromedio: 0,
+        porcentajeAvanceSimplificacion: 0
       };
     }
 
@@ -88,12 +123,49 @@ const DashboardSecretarias = () => {
       nivelesDigitalizacion.reduce((sum, nivel) => sum + nivel, 0) : 0;
     const promedioDigitalizacion = nivelesDigitalizacion.length > 0 ? 
       sumaDigitalizacion / nivelesDigitalizacion.length : 0;
+      
+    // Calcular el porcentaje de avance de simplificación
+    // Este porcentaje considera el avance individual de cada trámite y cuántos están en proceso
+    let porcentajeAvanceSimplificacion = 0;
     
+    // Calcular el avance individual de cada trámite basado en los pasos completados
+    const avancesPorTramite = tramites.map(tramite => {
+      if (!tramite) return 0;
+      
+      // Contar puntos acumulados para este trámite
+      let puntosTramite = 0;
+      
+      // Pasos 1-6 (valor 0.5 cada uno)
+      if (tramite.capacitacion_modulo1) puntosTramite += 0.5;
+      if (tramite.boceto_modelado) puntosTramite += 0.5;
+      if (tramite.bizagi_modelado) puntosTramite += 0.5;
+      if (tramite.vo_bo_bizagi) puntosTramite += 0.5;
+      if (tramite.capacitacion_modulo2) puntosTramite += 0.5;
+      if (tramite.acciones_reingenieria) puntosTramite += 0.5;
+      
+      // Pasos 7-11 (valor 1 cada uno)
+      if (tramite.vo_bo_acciones_reingenieria) puntosTramite += 1;
+      if (tramite.capacitacion_modulo3) puntosTramite += 1;
+      if (tramite.boceto_acuerdo) puntosTramite += 1;
+      if (tramite.vo_bo_acuerdo) puntosTramite += 1;
+      if (tramite.publicado) puntosTramite += 1;
+      
+      // Calcular porcentaje de avance para este trámite (sobre 8 puntos posibles)
+      return (puntosTramite / 8) * 100;
+    });
+    
+    // Calcular la suma de todos los avances individuales
+    const sumaAvancesIndividuales = avancesPorTramite.reduce((sum, avance) => sum + avance, 0);
+    
+    // Para el porcentaje total, consideramos el avance de todos los trámites disponibles a nivel estatal
+    porcentajeAvanceSimplificacion = sumaAvancesIndividuales / TOTAL_TRAMITES_ESTATALES;
+
     return {
       totalTramites: tramites.length,
-      tramitesEnProceso,
+      tramitesEnProceso: tramitesEnProceso,
       secretariasActivas: secretariasUnicas.size,
-      nivelDigitalizacionPromedio: promedioDigitalizacion
+      nivelDigitalizacionPromedio: promedioDigitalizacion,
+      porcentajeAvanceSimplificacion: porcentajeAvanceSimplificacion
     };
   };
 
@@ -165,27 +237,69 @@ const DashboardSecretarias = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-4" style={{ color: COLORS.primaryDark }}>Dashboard de Simplificación de Trámites</h1>
+      <h1 className="text-2xl font-bold mb-6" style={{ color: COLORS.primaryDark }}>Dashboard de Simplificación de Trámites</h1>
       
-      {/* Tarjetas de resumen con visualizaciones - Forzar 2 KPIs por fila */}
-        <div className="grid grid-cols-2 gap-3 mb-6">
-          {/* Tarjeta: Total de Trámites */}
-          <div className="rounded-lg shadow-sm" style={{ backgroundColor: COLORS.white, border: `1px solid ${COLORS.mediumGray}` }}>
-            <div className="p-3">
-              <div className="flex items-center mb-2">
-                <div className="rounded-full p-2 mr-3" style={{ backgroundColor: COLORS.primary }}>
-                  <FaFileAlt className="text-white text-lg" />
+      {/* BLOQUE 1: PANORAMA GENERAL DEL ESTADO */}
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold mb-4" style={{ color: COLORS.primaryDark, borderBottom: `2px solid ${COLORS.primary}`, paddingBottom: '8px' }}>
+          <FaProjectDiagram className="inline mr-2" /> Panorama General del Estado
+        </h2>
+        
+        {/* Tarjetas KPI en una sola fila horizontal */}
+        <div className="flex flex-wrap gap-4">
+          {/* KPI 1: Porcentaje de avance de simplificación */}
+          <div className="flex-1 min-w-[250px] rounded-lg shadow-md" style={{ backgroundColor: COLORS.white, border: `1px solid ${COLORS.mediumGray}` }}>
+            <div className="p-4">
+              <div className="flex items-center mb-3">
+                <div className="rounded-full p-2.5 mr-3" style={{ backgroundColor: '#10B981' }}>
+                  <FaChartLine className="text-white text-xl" />
                 </div>
                 <div>
-                  <p className="text-xs font-medium" style={{ color: COLORS.darkGray }}>Total de Trámites</p>
+                  <p className="text-sm font-medium" style={{ color: COLORS.darkGray }}>Porcentaje de avance de simplificación</p>
+                  <p className="text-2xl font-bold" style={{ color: '#10B981' }}>
+                    {estadisticasGenerales.porcentajeAvanceSimplificacion.toFixed(2)}%
+                  </p>
+                </div>
+              </div>
+              
+              {/* Barra de progreso horizontal con gradiente */}
+              <div className="relative pt-1">
+                <div className="overflow-hidden h-3 mb-1 text-xs flex rounded-full bg-gray-200">
+                  <div 
+                    style={{ width: `${Math.round(estadisticasGenerales.porcentajeAvanceSimplificacion)}%` }} 
+                    className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-green-400 to-green-600">
+                  </div>
+                </div>
+                <div className="flex justify-between text-xs text-gray-600">
+                  <span>0%</span>
+                  <span>50%</span>
+                  <span>100%</span>
+                </div>
+              </div>
+              <p className="mt-2 text-xs text-gray-600">
+                Avance ponderado de {estadisticasGenerales.totalTramites} trámites sobre {TOTAL_TRAMITES_ESTATALES} totales (12 pasos por trámite)
+              </p>
+            </div>
+          </div>
+          
+          {/* KPI 2: Total de trámites en proceso */}
+          <div className="flex-1 min-w-[250px] rounded-lg shadow-md" style={{ backgroundColor: COLORS.white, border: `1px solid ${COLORS.mediumGray}` }}>
+            <div className="p-4">
+              <div className="flex items-center mb-3">
+                <div className="rounded-full p-2.5 mr-3" style={{ backgroundColor: COLORS.primary }}>
+                  <FaFileAlt className="text-white text-xl" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium" style={{ color: COLORS.darkGray }}>Total de Trámites en Proceso</p>
                   <div className="flex items-baseline">
-                    <p className="text-xl font-bold" style={{ color: COLORS.primaryDark }}>{estadisticasGenerales.totalTramites}</p>
-                    <p className="text-xs ml-1" style={{ color: COLORS.darkGray }}>/900</p>
+                    <p className="text-2xl font-bold" style={{ color: COLORS.primaryDark }}>{estadisticasGenerales.totalTramites}</p>
+                    <p className="text-sm ml-1" style={{ color: COLORS.darkGray }}>de {TOTAL_TRAMITES_ESTATALES}</p>
                   </div>
                 </div>
               </div>
+              
               {/* Barra de progreso */}
-              <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden">
+              <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
                 <div 
                   className="h-full rounded-full" 
                   style={{ 
@@ -194,165 +308,97 @@ const DashboardSecretarias = () => {
                   }}
                 ></div>
               </div>
-              <div className="flex justify-end mt-1">
-                <span className="text-xs" style={{ color: COLORS.darkGray }}>
-                  {Math.round((estadisticasGenerales.totalTramites / 900) * 100)}%
-                </span>
-              </div>
+              <p className="mt-2 text-xs text-gray-600">
+                Incluye trámites en cualquier paso del flujo
+              </p>
             </div>
           </div>
           
-          {/* Tarjeta: Trámites en Proceso */}
-          <div className="rounded-lg shadow-sm" style={{ backgroundColor: COLORS.white, border: `1px solid ${COLORS.mediumGray}` }}>
-            <div className="p-3">
-              <div className="flex items-center mb-2">
-                <div className="rounded-full p-2 mr-3" style={{ backgroundColor: COLORS.accent }}>
-                  <FaTools className="text-white text-lg" />
+          {/* KPI 3: Secretarías con trámites en proceso */}
+          <div className="flex-1 min-w-[250px] rounded-lg shadow-md" style={{ backgroundColor: COLORS.white, border: `1px solid ${COLORS.mediumGray}` }}>
+            <div className="p-4">
+              <div className="flex items-center mb-3">
+                <div className="rounded-full p-2.5 mr-3" style={{ backgroundColor: '#8B5CF6' }}>
+                  <FaBuilding className="text-white text-xl" />
                 </div>
                 <div>
-                  <p className="text-xs font-medium" style={{ color: COLORS.darkGray }}>Trámites en Proceso</p>
+                  <p className="text-sm font-medium" style={{ color: COLORS.darkGray }}>Secretarías con trámites en proceso</p>
                   <div className="flex items-baseline">
-                    <p className="text-xl font-bold" style={{ color: COLORS.primaryDark }}>{estadisticasGenerales.tramitesEnProceso}</p>
-                    <p className="text-xs ml-1" style={{ color: COLORS.darkGray }}>/{estadisticasGenerales.totalTramites}</p>
+                    <p className="text-2xl font-bold" style={{ color: '#8B5CF6' }}>{estadisticasGenerales.secretariasActivas}</p>
+                    <p className="text-sm ml-1" style={{ color: COLORS.darkGray }}>de 17</p>
                   </div>
                 </div>
               </div>
               
-              {/* Gráfico circular */}
-              <div className="flex justify-center items-center my-1">
-                <div style={{ 
-                  position: 'relative', 
-                  width: '60px', 
-                  height: '60px',
-                }}>
-                  <svg width="60" height="60" viewBox="0 0 60 60">
-                    {/* Círculo de fondo */}
-                    <circle 
-                      cx="30" 
-                      cy="30" 
-                      r="25" 
-                      fill="none" 
-                      stroke="#e5e7eb" 
-                      strokeWidth="8" 
-                    />
-                    {/* Círculo de progreso */}
-                    <circle 
-                      cx="30" 
-                      cy="30" 
-                      r="25" 
-                      fill="none" 
-                      stroke={COLORS.accent} 
-                      strokeWidth="8" 
-                      strokeDasharray={`${(estadisticasGenerales.tramitesEnProceso / estadisticasGenerales.totalTramites) * 157} 157`} 
-                      strokeDashoffset="0" 
-                      strokeLinecap="round" 
-                      transform="rotate(-90 30 30)" 
-                    />
-                  </svg>
-                  <div style={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    fontSize: '0.75rem',
-                    color: COLORS.darkGray
-                  }}>
-                    {Math.round((estadisticasGenerales.tramitesEnProceso / estadisticasGenerales.totalTramites) * 100)}%
-                  </div>
+              {/* Barra horizontal con color morado */}
+              <div className="mt-2">
+                <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div 
+                    className="bg-gradient-to-r from-indigo-400 to-purple-600 h-3 rounded-full" 
+                    style={{ width: `${Math.round((estadisticasGenerales.secretariasActivas / 17) * 100)}%` }}
+                  ></div>
                 </div>
               </div>
+              <p className="mt-2 text-xs text-gray-600">
+                Secretarías activas en al menos un trámite
+              </p>
             </div>
           </div>
           
-          {/* Tarjeta: Secretarías Activas */}
-          <div className="rounded-lg shadow-sm" style={{ backgroundColor: COLORS.white, border: `1px solid ${COLORS.mediumGray}` }}>
-            <div className="p-3">
-              <div className="flex items-center mb-2">
-                <div className="rounded-full p-2 mr-3" style={{ backgroundColor: COLORS.secondary }}>
-                  <FaBuilding className="text-white text-lg" />
+          {/* KPI 4: Nivel promedio de digitalización */}
+          <div className="flex-1 min-w-[250px] rounded-lg shadow-md" style={{ backgroundColor: COLORS.white, border: `1px solid ${COLORS.mediumGray}` }}>
+            <div className="p-4">
+              <div className="flex items-center mb-3">
+                <div className="rounded-full p-2.5 mr-3" style={{ backgroundColor: COLORS.accent }}>
+                  <FaSignal className="text-white text-xl" />
                 </div>
                 <div>
-                  <p className="text-xs font-medium" style={{ color: COLORS.darkGray }}>Secretarías Activas</p>
-                  <p className="text-xl font-bold" style={{ color: COLORS.primaryDark }}>{estadisticasGenerales.secretariasActivas}</p>
-                </div>
-              </div>
-              
-              {/* Visualización de iconos para secretarías */}
-              <div className="flex flex-wrap justify-center gap-1 mt-2">
-                {Array.from({ length: estadisticasGenerales.secretariasActivas }).map((_, index) => (
-                  <div 
-                    key={index} 
-                    className="rounded-full" 
-                    style={{ 
-                      backgroundColor: COLORS.secondary, 
-                      width: '12px', 
-                      height: '12px' 
-                    }}
-                  ></div>
-                ))}
-                {Array.from({ length: Math.max(0, 20 - estadisticasGenerales.secretariasActivas) }).map((_, index) => (
-                  <div 
-                    key={`inactive-${index}`} 
-                    className="rounded-full" 
-                    style={{ 
-                      backgroundColor: '#e5e7eb', 
-                      width: '12px', 
-                      height: '12px' 
-                    }}
-                  ></div>
-                ))}
-              </div>
-            </div>
-          </div>
-          
-          {/* Tarjeta: Nivel Digitalización */}
-          <div className="rounded-lg shadow-sm" style={{ backgroundColor: COLORS.white, border: `1px solid ${COLORS.mediumGray}` }}>
-            <div className="p-3">
-              <div className="flex items-center mb-2">
-                <div className="rounded-full p-2 mr-3" style={{ backgroundColor: COLORS.primaryDark }}>
-                  <FaSignal className="text-white text-lg" />
-                </div>
-                <div>
-                  <p className="text-xs font-medium" style={{ color: COLORS.darkGray }}>Nivel Digitalización</p>
+                  <p className="text-sm font-medium" style={{ color: COLORS.darkGray }}>Nivel Promedio de Digitalización</p>
                   <div className="flex items-baseline">
-                    <p className="text-xl font-bold" style={{ color: COLORS.primaryDark }}>
+                    <p className="text-2xl font-bold" style={{ color: COLORS.accent }}>
                       {estadisticasGenerales.nivelDigitalizacionPromedio.toFixed(1)}
                     </p>
-                    <span className="text-xs ml-1" style={{ color: COLORS.darkGray }}>/4.0</span>
+                    <p className="text-sm ml-1" style={{ color: COLORS.darkGray }}>/4.0</p>
                   </div>
                 </div>
               </div>
               
-              {/* Medidor visual de nivel */}
-              <div className="flex justify-between mt-1 mb-1">
-                {[0, 1, 2, 3, 4].map((nivel) => (
-                  <div key={nivel} className="flex flex-col items-center">
+              {/* Visualización semicircular */}
+              <div className="relative h-12 w-full mt-2">
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-full h-12 relative">
+                    {/* Fondo del semicírculo */}
+                    <div className="absolute top-0 left-0 right-0 h-6 bg-gray-200 rounded-t-full overflow-hidden"></div>
+                    
+                    {/* Progreso del semicírculo */}
                     <div 
-                      className="rounded-full" 
-                      style={{ 
-                        width: '14px', 
-                        height: '14px',
-                        backgroundColor: nivel <= Math.floor(estadisticasGenerales.nivelDigitalizacionPromedio) 
-                          ? COLORS.primaryDark 
-                          : (nivel === Math.ceil(estadisticasGenerales.nivelDigitalizacionPromedio) && 
-                             nivel > Math.floor(estadisticasGenerales.nivelDigitalizacionPromedio))
-                            ? COLORS.primary + '80' /* Semi-transparente para nivel parcial */
-                            : '#e5e7eb'
-                      }}
+                      className="absolute top-0 left-0 h-6 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-t-full overflow-hidden" 
+                      style={{ width: `${(estadisticasGenerales.nivelDigitalizacionPromedio / 4) * 100}%` }}
                     ></div>
-                    <span className="text-xs mt-1" style={{ color: COLORS.darkGray }}>{nivel}</span>
+                    
+                    {/* Marcadores de nivel */}
+                    <div className="absolute bottom-0 left-0 right-0 flex justify-between px-1">
+                      {[0, 1, 2, 3, 4].map(nivel => (
+                        <div key={nivel} className="flex flex-col items-center">
+                          <div className="w-1 h-3 bg-gray-400"></div>
+                          <span className="text-xs mt-1" style={{ color: COLORS.darkGray }}>{nivel}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                ))}
+                </div>
               </div>
+              <p className="mt-4 text-xs text-gray-600">
+                Promedio de nivel de digitalización de los trámites en proceso
+              </p>
             </div>
           </div>
+        </div>
       </div>
       
-      {/* Gráficos */}
+      {/* BLOQUE 2 y 3: GRÁFICOS DE DISTRIBUCIÓN Y AVANCE */}
       {!isLoading && !error && Array.isArray(tramites) && tramites.length > 0 && !selectedSecretaria && (
         <div className="mb-6">
-          <h2 className="text-xl font-bold mb-3" style={{ color: COLORS.primaryDark }}>Visualización de Avance</h2>
-          {/* Eliminado el contenedor adicional para permitir que el layout de DashboardCharts funcione correctamente */}
           <DashboardCharts 
             tramites={tramites} 
             secretarias={secretarias} 
@@ -408,6 +454,7 @@ const DashboardSecretarias = () => {
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
           colors={COLORS}
+          totalTramitesSecretaria={TOTAL_TRAMITES_POR_SECRETARIA[selectedSecretaria.id] || 0}
         />
       )}
       

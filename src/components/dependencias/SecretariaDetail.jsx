@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaClipboardCheck, FaTools, FaChartLine, FaSearch, FaArrowLeft } from 'react-icons/fa';
+import { FaClipboardCheck, FaTools, FaChartLine, FaSearch, FaArrowLeft, FaSignal } from 'react-icons/fa';
 import TramiteCard from './TramiteCard';
 
 const SecretariaDetail = ({ 
@@ -10,7 +10,8 @@ const SecretariaDetail = ({
   expandedTramites, 
   toggleTramiteExpanded, 
   onBack,
-  colors
+  colors,
+  totalTramitesSecretaria // Total de trámites que tiene la secretaría (no solo los que están en proceso de simplificación)
 }) => {
   // Obtener los colores para el logo de la secretaría (placeholder)
   const getSecretariaColors = (secretariaId) => {
@@ -63,7 +64,10 @@ const SecretariaDetail = ({
         tramitesEnProceso: 0,
         tramitesPublicados: 0,
         nivelDigitalizacionPromedio: 0,
-        porcentajeAvance: 0
+        porcentajeAvance: 0,
+        porcentajeTramitesEnProceso: 0,
+        totalTramitesDisponibles: totalTramitesSecretaria || 0,
+        porcentajeAvanceSimplificacion: 0
       };
     }
     
@@ -80,34 +84,87 @@ const SecretariaDetail = ({
     });
     const nivelDigitalizacionPromedio = totalTramites > 0 ? sumaDigitalizacion / totalTramites : 0;
     
-    // Calcular porcentaje de avance
-    // Contar pasos completados en todos los trámites
-    const totalPasos = tramites.length * 11; // 11 pasos por trámite
-    let pasosCompletados = 0;
+    // Calcular porcentaje de avance con ponderación
+    // Pasos 1-6 valen 0.5 cada uno, pasos 7-11 valen 1 cada uno
+    // Total de puntos posibles por trámite: 6*0.5 + 5*1 = 3 + 5 = 8
+    const puntosMaximosPorTramite = 8; // 3 puntos de los primeros 6 pasos + 5 puntos de los últimos 5 pasos
+    const puntosMaximosTotales = tramites.length * puntosMaximosPorTramite;
+    let puntosTotales = 0;
     
     tramites.forEach(tramite => {
       if (!tramite) return;
       
-      if (tramite.diagnostico) pasosCompletados++;
-      if (tramite.analisis_simplificacion) pasosCompletados++;
-      if (tramite.rediseno_propuesta) pasosCompletados++;
-      if (tramite.implementacion_simplificacion) pasosCompletados++;
-      if (tramite.difusion) pasosCompletados++;
-      if (tramite.interoperabilidad && tramite.expediente_digital) pasosCompletados++; // Paso 6 y 7 juntos
-      if (tramite.capacitacion) pasosCompletados++;
-      if (tramite.liberacion) pasosCompletados++;
-      if (tramite.sistematizacion) pasosCompletados++;
-      if (tramite.publicado) pasosCompletados++;
+      // Pasos 1-6 (valor 0.5 cada uno)
+      if (tramite.capacitacion_modulo1) puntosTotales += 0.5;
+      if (tramite.boceto_modelado) puntosTotales += 0.5;
+      if (tramite.bizagi_modelado) puntosTotales += 0.5;
+      if (tramite.vo_bo_bizagi) puntosTotales += 0.5;
+      if (tramite.capacitacion_modulo2) puntosTotales += 0.5;
+      if (tramite.acciones_reingenieria) puntosTotales += 0.5;
+      
+      // Pasos 7-11 (valor 1 cada uno)
+      if (tramite.vo_bo_acciones_reingenieria) puntosTotales += 1;
+      if (tramite.capacitacion_modulo3) puntosTotales += 1;
+      if (tramite.boceto_acuerdo) puntosTotales += 1;
+      if (tramite.vo_bo_acuerdo) puntosTotales += 1;
+      if (tramite.publicado) puntosTotales += 1;
     });
     
-    const porcentajeAvance = totalPasos > 0 ? (pasosCompletados / totalPasos) * 100 : 0;
+    const porcentajeAvance = puntosMaximosTotales > 0 ? (puntosTotales / puntosMaximosTotales) * 100 : 0;
+    
+    // Calcular el porcentaje de trámites en proceso respecto al total de trámites de la secretaría
+    const totalTramitesDisponibles = totalTramitesSecretaria || totalTramites;
+    const porcentajeTramitesEnProceso = totalTramitesDisponibles > 0 ? (totalTramites / totalTramitesDisponibles) * 100 : 0;
+    
+    // Calcular el porcentaje de avance de simplificación
+    // Este porcentaje considera el avance individual de cada trámite y cuántos están en proceso
+    let porcentajeAvanceSimplificacion = 0;
+    
+    if (totalTramitesDisponibles > 0) {
+      // Calcular el avance individual de cada trámite basado en los pasos completados
+      const avancesPorTramite = tramites.map(tramite => {
+        if (!tramite) return 0;
+        
+        // Contar puntos acumulados para este trámite
+        let puntosTramite = 0;
+        
+        // Pasos 1-6 (valor 0.5 cada uno)
+        if (tramite.capacitacion_modulo1) puntosTramite += 0.5;
+        if (tramite.boceto_modelado) puntosTramite += 0.5;
+        if (tramite.bizagi_modelado) puntosTramite += 0.5;
+        if (tramite.vo_bo_bizagi) puntosTramite += 0.5;
+        if (tramite.capacitacion_modulo2) puntosTramite += 0.5;
+        if (tramite.acciones_reingenieria) puntosTramite += 0.5;
+        
+        // Pasos 7-11 (valor 1 cada uno)
+        if (tramite.vo_bo_acciones_reingenieria) puntosTramite += 1;
+        if (tramite.capacitacion_modulo3) puntosTramite += 1;
+        if (tramite.boceto_acuerdo) puntosTramite += 1;
+        if (tramite.vo_bo_acuerdo) puntosTramite += 1;
+        if (tramite.publicado) puntosTramite += 1;
+        
+        // Calcular porcentaje de avance para este trámite (sobre 8 puntos posibles)
+        return (puntosTramite / 8) * 100;
+      });
+      
+      // Calcular la suma de todos los avances individuales
+      const sumaAvancesIndividuales = avancesPorTramite.reduce((sum, avance) => sum + avance, 0);
+      
+      // Para el porcentaje total, consideramos el avance de todos los trámites disponibles
+      // Por ejemplo, si hay 8 trámites totales pero solo 4 están en proceso con 50% de avance cada uno,
+      // el porcentaje total sería (4 * 50%) / 8 = 25%
+      porcentajeAvanceSimplificacion = sumaAvancesIndividuales / totalTramitesDisponibles;
+    }
     
     return {
       totalTramites,
       tramitesEnProceso,
       tramitesPublicados,
       nivelDigitalizacionPromedio,
-      porcentajeAvance
+      porcentajeAvance,
+      porcentajeTramitesEnProceso,
+      totalTramitesDisponibles,
+      porcentajeAvanceSimplificacion
     };
   };
   
@@ -140,61 +197,116 @@ const SecretariaDetail = ({
         </div>
       </div>
       
-      {/* Estadísticas de la secretaría */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-blue-50 p-4 rounded-lg">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-blue-700">Total de Trámites</p>
-              <p className="text-2xl font-bold text-blue-900">{estadisticas.totalTramites}</p>
+      {/* Estadísticas de la secretaría - Diseño mejorado y compacto */}
+      <div className="mb-4">
+        <div className="bg-gradient-to-r from-blue-50 to-green-50 p-4 rounded-xl shadow-sm">
+          <h3 className="text-base font-bold text-gray-800 mb-3 flex items-center">
+            <span className="bg-gradient-to-r from-blue-600 to-green-600 text-white p-1.5 rounded-lg mr-2">
+              <FaChartLine className="text-lg" />
+            </span>
+            Estadísticas de Simplificación
+          </h3>
+          
+          {/* KPI Principal - Porcentaje de avance de simplificación */}
+          <div className="bg-white p-4 rounded-lg shadow-sm mb-3 border-l-4 border-green-500">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500">Porcentaje de avance de simplificación</p>
+                <div className="flex items-baseline">
+                  <p className="text-2xl font-bold text-green-600">{Math.round(estadisticas.porcentajeAvanceSimplificacion)}%</p>
+                  <p className="text-xs text-gray-500 ml-2">
+                    {estadisticas.totalTramites} en proceso de {estadisticas.totalTramitesDisponibles} totales
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center justify-center bg-green-100 p-3 rounded-full h-12 w-12">
+                <FaChartLine className="text-green-500 text-xl" />
+              </div>
             </div>
-            <div className="bg-blue-100 p-3 rounded-full">
-              <FaClipboardCheck className="text-blue-500 text-xl" />
+            
+            <div className="mt-2">
+              <div className="relative">
+                <div className="flex mb-1 items-center justify-between">
+                  <div>
+                    <span className="text-xs font-semibold inline-block py-0.5 px-2 uppercase rounded-full text-green-600 bg-green-100">
+                      Progreso
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xs font-semibold inline-block py-0.5 px-2 uppercase rounded-full text-green-600 bg-green-100">
+                      {Math.round(estadisticas.porcentajeAvanceSimplificacion)}%
+                    </span>
+                  </div>
+                </div>
+                <div className="overflow-hidden h-2 mb-1 text-xs flex rounded-full bg-green-100">
+                  <div 
+                    style={{ width: `${Math.round(estadisticas.porcentajeAvanceSimplificacion)}%` }} 
+                    className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-green-400 to-green-600">
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-        
-        <div className="bg-orange-50 p-4 rounded-lg">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-orange-700">Trámites en Proceso</p>
-              <p className="text-2xl font-bold text-orange-900">{estadisticas.tramitesEnProceso}</p>
+          
+          {/* KPIs Secundarios en fila horizontal */}
+          <div className="grid grid-cols-2 gap-3">
+            {/* Trámites en proceso de Simplificación */}
+            <div className="bg-white p-3 rounded-lg shadow-sm border-l-4 border-blue-500">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-gray-500">Trámites en proceso</p>
+                  <div className="flex items-baseline">
+                    <p className="text-xl font-bold text-blue-600">{estadisticas.totalTramites}</p>
+                    <p className="text-xs text-gray-500 ml-1">/ {estadisticas.totalTramitesDisponibles}</p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-center bg-blue-100 p-2 rounded-full h-10 w-10">
+                  <FaClipboardCheck className="text-blue-500 text-sm" />
+                </div>
+              </div>
+              
+              <div className="mt-1">
+                <div className="overflow-hidden h-1.5 text-xs flex rounded-full bg-blue-100">
+                  <div 
+                    style={{ width: `${estadisticas.porcentajeTramitesEnProceso}%` }} 
+                    className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-blue-400 to-blue-600">
+                  </div>
+                </div>
+                <div className="flex justify-end mt-0.5">
+                  <span className="text-xs text-blue-600">{Math.round(estadisticas.porcentajeTramitesEnProceso)}%</span>
+                </div>
+              </div>
             </div>
-            <div className="bg-orange-100 p-3 rounded-full">
-              <FaTools className="text-orange-500 text-xl" />
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-yellow-50 p-4 rounded-lg">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-yellow-700">Nivel Digitalización</p>
-              <p className="text-2xl font-bold text-yellow-900">
-                {estadisticas.nivelDigitalizacionPromedio.toFixed(1)}
-                <span className="text-sm font-normal text-yellow-600 ml-1">/4.0</span>
-              </p>
-            </div>
-            <div className="bg-yellow-100 p-3 rounded-full">
-              <FaChartLine className="text-yellow-500 text-xl" />
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-purple-50 p-4 rounded-lg">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-purple-700">Avance General</p>
-              <p className="text-2xl font-bold text-purple-900">
-                {Math.round(estadisticas.porcentajeAvance)}%
-              </p>
-            </div>
-            <div className="w-full max-w-24">
-              <div className="w-full bg-purple-200 rounded-full h-2">
-                <div 
-                  className="bg-purple-600 h-2 rounded-full" 
-                  style={{ width: `${estadisticas.porcentajeAvance}%` }}
-                ></div>
+            
+            {/* Nivel de Digitalización */}
+            <div className="bg-white p-3 rounded-lg shadow-sm border-l-4 border-amber-500">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-gray-500">Nivel de Digitalización</p>
+                  <div className="flex items-baseline">
+                    <p className="text-xl font-bold text-amber-600">{estadisticas.nivelDigitalizacionPromedio.toFixed(1)}</p>
+                    <p className="text-xs text-gray-500 ml-1">/4.0</p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-center bg-amber-100 p-2 rounded-full h-10 w-10">
+                  <FaSignal className="text-amber-500 text-sm" />
+                </div>
+              </div>
+              
+              <div className="mt-1">
+                <div className="flex justify-between gap-1">
+                  {[1, 2, 3, 4].map((nivel) => (
+                    <div key={nivel} className="flex-1">
+                      <div 
+                        className={`w-full h-1.5 rounded-full ${nivel <= Math.round(estadisticas.nivelDigitalizacionPromedio) 
+                          ? 'bg-amber-500' 
+                          : nivel <= Math.ceil(estadisticas.nivelDigitalizacionPromedio) && nivel > Math.floor(estadisticas.nivelDigitalizacionPromedio) 
+                            ? 'bg-amber-300' 
+                            : 'bg-gray-200'}`}
+                      ></div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>

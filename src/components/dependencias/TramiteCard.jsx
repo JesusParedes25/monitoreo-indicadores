@@ -1,5 +1,5 @@
 import React from 'react';
-import PipelineSteps from './PipelineSteps';
+import PipelineStepsEvidence from './PipelineStepsEvidence';
 
 const TramiteCard = ({ tramite, isExpanded, toggleExpand }) => {
   // Renderizar estrellas para nivel de digitalización (0-4 escala)
@@ -99,7 +99,7 @@ const TramiteCard = ({ tramite, isExpanded, toggleExpand }) => {
           </button>
         </div>
         
-        {isExpanded && <PipelineSteps tramite={tramite} />}
+        {isExpanded && <PipelineStepsEvidence tramite={tramite} />}
       </div>
     </div>
   );
