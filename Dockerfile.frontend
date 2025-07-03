@@ -13,7 +13,7 @@ RUN npm install
 COPY . .
 
 # Configurar la URL del backend para producción
-RUN echo "VITE_API_URL=http://backend:3000" > .env.production
+RUN echo "VITE_API_URL=http://srv885729.hstgr.cloud/api" > .env.production
 
 # Construir la aplicación
 RUN npm run build

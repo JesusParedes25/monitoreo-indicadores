@@ -47,6 +47,8 @@ services:
       - backend
     ports:
       - "80:80"
+    environment:
+      - VIRTUAL_HOST=srv885729.hstgr.cloud
     networks:
       - observatorio_network
 
