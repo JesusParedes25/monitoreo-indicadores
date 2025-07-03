@@ -5,7 +5,7 @@ import HomePage from "./pages/HomePage";
 import MunicipiosPage from "./pages/MunicipiosPage";
 import DependenciasPage from "./pages/DependenciasPage";
 import ContactoPage from "./pages/ContactoPage";
-import "./app.css";  
+import "./App.css";  
 
 export default function App() {
 
