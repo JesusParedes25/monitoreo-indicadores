@@ -1,4 +1,5 @@
 import React from 'react';
+import { getSecretariaLogo } from '../../utils/secretariaLogos';
 
 const SecretariaCard = ({ secretaria, tramites, onClick, colors }) => {
   // Obtener los colores para el logo de la secretaría (placeholder)
@@ -53,78 +54,92 @@ const SecretariaCard = ({ secretaria, tramites, onClick, colors }) => {
     if (!Array.isArray(tramites)) {
       return {
         totalTramites: 0,
-        tramitesPublicados: 0,
-        porcentajeAvance: 0
+        porcentajeAvanceSimplificacion: 0,
+        nivelDigitalizacionPromedio: 0
       };
     }
     
     const totalTramites = tramites.length;
-    const tramitesPublicados = tramites.filter(t => t && t.publicado === true).length;
+    const totalTramitesDisponibles = totalTramites; // En SecretariaDetail hay una prop totalTramitesSecretaria
     
-    // Calcular porcentaje de avance
-    // Contar pasos completados en todos los trámites
-    const totalPasos = tramites.length * 11; // 11 pasos por trámite
-    let pasosCompletados = 0;
-    
+    // Calcular nivel de digitalización promedio
+    let sumaDigitalizacion = 0;
     tramites.forEach(tramite => {
-      if (!tramite) return;
-      
-      if (tramite.diagnostico) pasosCompletados++;
-      if (tramite.analisis_simplificacion) pasosCompletados++;
-      if (tramite.rediseno_propuesta) pasosCompletados++;
-      if (tramite.implementacion_simplificacion) pasosCompletados++;
-      if (tramite.difusion) pasosCompletados++;
-      if (tramite.interoperabilidad && tramite.expediente_digital) pasosCompletados++; // Paso 6 y 7 juntos
-      if (tramite.capacitacion) pasosCompletados++;
-      if (tramite.liberacion) pasosCompletados++;
-      if (tramite.sistematizacion) pasosCompletados++;
-      if (tramite.publicado) pasosCompletados++;
+      if (tramite && typeof tramite.nivel_digitalizacion === 'number') {
+        sumaDigitalizacion += tramite.nivel_digitalizacion;
+      }
     });
+    const nivelDigitalizacionPromedio = totalTramites > 0 ? sumaDigitalizacion / totalTramites : 0;
     
-    const porcentajeAvance = totalPasos > 0 ? (pasosCompletados / totalPasos) * 100 : 0;
+    // Calcular el porcentaje de avance de simplificación exactamente como en SecretariaDetail
+    let porcentajeAvanceSimplificacion = 0;
+    
+    if (totalTramitesDisponibles > 0) {
+      // Calcular el avance individual de cada trámite basado en los pasos completados
+      const avancesPorTramite = tramites.map(tramite => {
+        if (!tramite) return 0;
+        
+        // Contar puntos acumulados para este trámite
+        let puntosTramite = 0;
+        
+        // Pasos 1-6 (valor 0.5 cada uno)
+        if (tramite.capacitacion_modulo1) puntosTramite += 0.5;
+        if (tramite.boceto_modelado) puntosTramite += 0.5;
+        if (tramite.bizagi_modelado) puntosTramite += 0.5;
+        if (tramite.vo_bo_bizagi) puntosTramite += 0.5;
+        if (tramite.capacitacion_modulo2) puntosTramite += 0.5;
+        if (tramite.acciones_reingenieria) puntosTramite += 0.5;
+        
+        // Pasos 7-11 (valor 1 cada uno)
+        if (tramite.vo_bo_acciones_reingenieria) puntosTramite += 1;
+        if (tramite.capacitacion_modulo3) puntosTramite += 1;
+        if (tramite.boceto_acuerdo) puntosTramite += 1;
+        if (tramite.vo_bo_acuerdo) puntosTramite += 1;
+        if (tramite.publicado) puntosTramite += 1;
+        
+        // Calcular porcentaje de avance para este trámite (sobre 8 puntos posibles)
+        return (puntosTramite / 8) * 100;
+      });
+      
+      // Calcular la suma de todos los avances individuales
+      const sumaAvancesIndividuales = avancesPorTramite.reduce((sum, avance) => sum + avance, 0);
+      
+      // Para el porcentaje total, consideramos el avance de todos los trámites disponibles
+      porcentajeAvanceSimplificacion = sumaAvancesIndividuales / totalTramitesDisponibles;
+    }
     
     return {
       totalTramites,
-      tramitesPublicados,
-      porcentajeAvance
+      porcentajeAvanceSimplificacion,
+      nivelDigitalizacionPromedio
     };
   };
   
   const estadisticas = calcularEstadisticas();
   
+  // Asegurarse de que cardColors existe y tiene la propiedad bg
+  const defaultColor = '#047857'; // Color verde por defecto
+  const borderColor = colors && colors.primary ? colors.primary : defaultColor;
+  const bgColor = colors && colors.lightBackground ? colors.lightBackground : '#f9fafb';
+  
   return (
     <div 
-      className="cursor-pointer rounded-lg shadow-md overflow-hidden transition-all duration-300 transform hover:shadow-lg hover:scale-105"
+      className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:scale-105"
       onClick={onClick}
     >
-      <div className={`p-6 flex flex-col items-center ${cardColors.bg}`}>
-        <div className={`w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold ${cardColors.text} mb-2`}>
-          {initials}
-        </div>
-        <h3 className={`text-center font-bold ${cardColors.text} text-sm`}>
-          {secretaria && secretaria.nombre ? 
-            (secretaria.nombre.length > 30 ? secretaria.nombre.substring(0, 30) + '...' : secretaria.nombre) : 
-            'Sin nombre'}
-        </h3>
-      </div>
-      <div className="bg-white p-4">
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-sm font-medium text-gray-600">Trámites:</span>
-          <span className="text-sm font-bold">{estadisticas.totalTramites}</span>
-        </div>
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-sm font-medium text-gray-600">Publicados:</span>
-          <span className="text-sm font-bold text-green-600">{estadisticas.tramitesPublicados}</span>
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
-          <div 
-            className="bg-blue-600 h-2 rounded-full" 
-            style={{ width: `${estadisticas.porcentajeAvance}%` }}
-          ></div>
-        </div>
-        <div className="text-xs text-right text-gray-500">
-          {Math.round(estadisticas.porcentajeAvance)}% completado
-        </div>
+      <div className="p-6 flex flex-col justify-center items-center bg-gradient-to-br from-gray-50 to-gray-100 border-b-4" style={{ borderColor }}>
+        {getSecretariaLogo(secretaria?.id) ? (
+          <img 
+            src={getSecretariaLogo(secretaria?.id)} 
+            alt={secretaria?.nombre || 'Logo de la secretaría'} 
+            className="h-24 object-contain mb-3" 
+          />
+        ) : (
+          <div className="w-24 h-24 rounded-full flex items-center justify-center text-3xl font-bold mb-3 shadow-md" style={{ backgroundColor: borderColor, color: 'white' }}>
+            {initials}
+          </div>
+        )}
+        <h3 className="text-center font-medium text-gray-700 text-sm mt-2 line-clamp-2">{secretaria?.nombre}</h3>
       </div>
     </div>
   );

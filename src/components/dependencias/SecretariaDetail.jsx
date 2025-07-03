@@ -1,6 +1,7 @@
 import React from 'react';
 import { FaClipboardCheck, FaTools, FaChartLine, FaSearch, FaArrowLeft, FaSignal } from 'react-icons/fa';
 import TramiteCard from './TramiteCard';
+import { getSecretariaLogo } from '../../utils/secretariaLogos';
 
 const SecretariaDetail = ({ 
   secretaria, 
@@ -78,8 +79,12 @@ const SecretariaDetail = ({
     // Calcular nivel de digitalización promedio
     let sumaDigitalizacion = 0;
     tramites.forEach(tramite => {
-      if (tramite && typeof tramite.nivel_digitalizacion === 'number') {
-        sumaDigitalizacion += tramite.nivel_digitalizacion;
+      if (tramite && tramite.nivel_digitalizacion) {
+        // Asegurar que nivel_digitalizacion sea un número
+        const nivelDigitalizacion = parseFloat(tramite.nivel_digitalizacion);
+        if (!isNaN(nivelDigitalizacion)) {
+          sumaDigitalizacion += nivelDigitalizacion;
+        }
       }
     });
     const nivelDigitalizacionPromedio = totalTramites > 0 ? sumaDigitalizacion / totalTramites : 0;
@@ -183,17 +188,24 @@ const SecretariaDetail = ({
     <div className="bg-white rounded-lg shadow-md p-6 mb-8">
       <div className="flex items-center mb-6">
         <button 
-          className="mr-4 bg-gray-200 hover:bg-gray-300 text-gray-700 p-2 rounded-full transition-colors"
           onClick={onBack}
+          className="p-2 mr-3 rounded-full hover:bg-gray-100 transition-colors"
+          aria-label="Volver"
         >
           <FaArrowLeft className="text-lg" />
         </button>
-        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold ${cardColors.bg} ${cardColors.text} mr-4`}>
-          {initials}
-        </div>
-        <div>
-          <h2 className="text-2xl font-bold text-gray-800">{secretaria?.nombre || 'Sin nombre'}</h2>
-          <p className="text-sm text-gray-500">Secretaría ID: {secretaria?.id || 'N/A'}</p>
+        <div className="flex items-center">
+          {secretaria?.id && getSecretariaLogo(secretaria.id) ? (
+            <img 
+              src={getSecretariaLogo(secretaria.id)} 
+              alt={`Logo de ${secretaria.nombre}`} 
+              className="h-16" 
+            />
+          ) : (
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold ${cardColors.bg} ${cardColors.text}`}>
+              {initials}
+            </div>
+          )}
         </div>
       </div>
       
@@ -335,7 +347,7 @@ const SecretariaDetail = ({
           <p className="text-yellow-700">No se encontraron trámites que coincidan con los criterios de búsqueda.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 w-full">
           {tramitesFiltrados.map(tramite => (
             <TramiteCard 
               key={tramite.id}

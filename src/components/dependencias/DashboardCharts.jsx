@@ -3,7 +3,6 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearSca
 import { Doughnut, Radar } from 'react-chartjs-2';
 import { COLORS } from '../../styles/colors';
 import FlowDiagram from './FlowDiagram';
-import TramiteCardMini from './TramiteCardMini';
 import SecretariaDetail from './SecretariaDetail';
 import { FaArrowLeft, FaSearch, FaTimes } from 'react-icons/fa';
 

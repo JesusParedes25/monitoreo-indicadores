@@ -235,7 +235,7 @@ app.get('/api/tramites', async (req, res) => {
         siglas: t.secretaria_siglas
       }
     }));
-    res.json(formattedTramites);
+    res.json(tramites);
   } catch (error) {
     console.error('Error al obtener trámites:', error);
     res.status(500).json({ error: 'Error al obtener los trámites', details: error.message });
@@ -285,7 +285,7 @@ app.get('/api/secretarias/:id/tramites', async (req, res) => {
         siglas: t.secretaria_siglas
       }
     }));
-    res.json(formattedTramites);
+    res.json(tramites);
   } catch (error) {
     console.error(`Error al obtener trámites de la secretaría ${id}:`, error);
     res.status(500).json({ error: 'Error al obtener los trámites de la secretaría' });

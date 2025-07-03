@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  # Servicio de base de datos PostgreSQL
+  postgres:
+    image: postgres:15
+    container_name: observatorio_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Gob13rnoDB$
+      POSTGRES_DB: observatorio_regulatorio
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d
+    networks:
+      - observatorio_network
+
+  # Servicio de backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: observatorio_backend
+    restart: always
+    depends_on:
+      - postgres
+    environment:
+      DATABASE_URL: postgresql://postgres:Gob13rnoDB$@postgres:5432/observatorio_regulatorio
+      NODE_ENV: production
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    networks:
+      - observatorio_network
+
+  # Servicio de frontend
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: observatorio_frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+    networks:
+      - observatorio_network
+
+networks:
+  observatorio_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
