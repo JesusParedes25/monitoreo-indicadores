@@ -2,6 +2,26 @@ import React, { useState } from 'react';
 import { COLORS } from '../../styles/colors';
 
 const FlowDiagram = ({ etapas, conteos, maxConteo }) => {
+  // Definir a qué fase pertenece cada etapa (1-5)
+  const fasesEtapas = [1, 1, 1, 2, 2, 3, 3, 4, 5];
+  
+  // Colores por fase (un color distinto para cada fase)
+  const coloresPorFase = {
+    1: '#4e73df', // Azul para Fase 1
+    2: '#1cc88a', // Verde para Fase 2
+    3: '#f6c23e', // Amarillo para Fase 3
+    4: '#e74a3b', // Rojo para Fase 4
+    5: '#6f42c1'  // Morado para Fase 5
+  };
+  
+  // Nombres de las fases para la leyenda
+  const nombresFases = {
+    1: 'Fase 1: Modelado',
+    2: 'Fase 2: Reingeniería',
+    3: 'Fase 3: Proceso',
+    4: 'Fase 4: Publicación',
+    5: 'Fase 5: Implementación'
+  };
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const [selectedIndex, setSelectedIndex] = useState(null);
   
@@ -19,12 +39,20 @@ const FlowDiagram = ({ etapas, conteos, maxConteo }) => {
     return ((conteo / total) * 100).toFixed(1);
   };
   
-  // Generar color con gradiente basado en la posición
+  // Generar color basado en la fase a la que pertenece la etapa
   const generarColor = (index) => {
-    const baseOpacity = 0.9 - (index * 0.04);
+    const fase = fasesEtapas[index];
+    const color = coloresPorFase[fase];
+    
+    // Convertir color hex a rgb para poder usar transparencia
+    const r = parseInt(color.slice(1, 3), 16);
+    const g = parseInt(color.slice(3, 5), 16);
+    const b = parseInt(color.slice(5, 7), 16);
+    
     return {
-      background: `linear-gradient(135deg, rgba(75, 50, 195, ${baseOpacity}) 0%, rgba(75, 50, 195, ${baseOpacity - 0.2}) 100%)`,
-      border: `2px solid rgba(75, 50, 195, ${baseOpacity + 0.1})`
+      background: `linear-gradient(135deg, ${color} 0%, rgba(${r}, ${g}, ${b}, 0.8) 100%)`,
+      border: `2px solid ${color}`,
+      fase: fase // Guardamos la fase para usarla en la UI
     };
   };
   
@@ -38,9 +66,36 @@ const FlowDiagram = ({ etapas, conteos, maxConteo }) => {
   return (
     <div className="flow-diagram-interactive" style={{ width: '100%', height: '100%', position: 'relative', padding: '20px 0' }}>
       {/* Texto introductorio */}
-      <div className="text-sm text-gray-700 mb-6">
+      <div className="text-sm text-gray-700 mb-3">
         Visualiza el avance secuencial de los trámites en cada etapa de la Ruta de Simplificación. 
         Las diferencias entre etapas reflejan puntos de rezago o cuellos de botella.
+      </div>
+      
+      {/* Leyenda de fases */}
+      <div className="fases-legend" style={{
+        display: 'flex',
+        justifyContent: 'center',
+        flexWrap: 'wrap',
+        gap: '10px',
+        marginBottom: '20px'
+      }}>
+        {Object.entries(nombresFases).map(([fase, nombre]) => (
+          <div key={fase} style={{
+            display: 'flex',
+            alignItems: 'center',
+            marginRight: '10px',
+            fontSize: '12px'
+          }}>
+            <div style={{
+              width: '12px',
+              height: '12px',
+              borderRadius: '50%',
+              backgroundColor: coloresPorFase[fase],
+              marginRight: '5px'
+            }}></div>
+            <span>{nombre}</span>
+          </div>
+        ))}
       </div>
       
       {/* Contenedor del diagrama de flujo */}
@@ -105,7 +160,7 @@ const FlowDiagram = ({ etapas, conteos, maxConteo }) => {
             >
               {/* Número de trámites */}
               <div className="font-bold text-lg">{conteo}</div>
-              <div className="text-xs">trámites</div>
+              <div className="text-xs"></div>
               
               {/* Etiqueta de la etapa (debajo del círculo) */}
               <div className="etapa-label" style={{

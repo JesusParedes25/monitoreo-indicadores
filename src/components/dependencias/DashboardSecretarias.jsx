@@ -17,7 +17,7 @@ const DashboardSecretarias = () => {
   const [searchTerm, setSearchTerm] = useState('');
   
   // Constante para el total estatal de trámites
-  const TOTAL_TRAMITES_ESTATALES = 229;
+  const TOTAL_TRAMITES_ESTATALES = 249;
   
   // Totales de trámites por secretaría (cantidades correctas)
   const TOTAL_TRAMITES_POR_SECRETARIA = {
@@ -290,7 +290,7 @@ const DashboardSecretarias = () => {
                   <FaFileAlt className="text-white text-xl" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium" style={{ color: COLORS.darkGray }}>Total de Trámites en Proceso</p>
+                  <p className="text-sm font-medium" style={{ color: COLORS.darkGray }}>Total de Trámites en Proceso de Simplificación</p>
                   <div className="flex items-baseline">
                     <p className="text-2xl font-bold" style={{ color: COLORS.primaryDark }}>{estadisticasGenerales.totalTramites}</p>
                     <p className="text-sm ml-1" style={{ color: COLORS.darkGray }}>de {TOTAL_TRAMITES_ESTATALES}</p>
@@ -303,7 +303,7 @@ const DashboardSecretarias = () => {
                 <div 
                   className="h-full rounded-full" 
                   style={{ 
-                    width: `${Math.min(100, Math.round((estadisticasGenerales.totalTramites / 900) * 100))}%`,
+                    width: `${Math.min(100, Math.round((estadisticasGenerales.totalTramites /   249) * 100))}%`,
                     backgroundColor: COLORS.primary
                   }}
                 ></div>
@@ -325,7 +325,7 @@ const DashboardSecretarias = () => {
                   <p className="text-sm font-medium" style={{ color: COLORS.darkGray }}>Secretarías con trámites en proceso</p>
                   <div className="flex items-baseline">
                     <p className="text-2xl font-bold" style={{ color: '#8B5CF6' }}>{estadisticasGenerales.secretariasActivas}</p>
-                    <p className="text-sm ml-1" style={{ color: COLORS.darkGray }}>de 17</p>
+                    <p className="text-sm ml-1" style={{ color: COLORS.darkGray }}>de 12</p>
                   </div>
                 </div>
               </div>
@@ -335,7 +335,7 @@ const DashboardSecretarias = () => {
                 <div className="w-full bg-gray-200 rounded-full h-3">
                   <div 
                     className="bg-gradient-to-r from-indigo-400 to-purple-600 h-3 rounded-full" 
-                    style={{ width: `${Math.round((estadisticasGenerales.secretariasActivas / 17) * 100)}%` }}
+                    style={{ width: `${Math.round((estadisticasGenerales.secretariasActivas /12) * 100)}%` }}
                   ></div>
                 </div>
               </div>

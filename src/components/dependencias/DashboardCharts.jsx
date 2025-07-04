@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title, RadialLinearScale, PointElement, LineElement, Filler } from 'chart.js';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { Doughnut, Radar } from 'react-chartjs-2';
 import { COLORS } from '../../styles/colors';
 import FlowDiagram from './FlowDiagram';
@@ -18,7 +19,8 @@ ChartJS.register(
   RadialLinearScale, 
   PointElement, 
   LineElement, 
-  Filler
+  Filler,
+  ChartDataLabels
 );
 
 const DashboardCharts = ({ tramites, secretarias, estadisticasGenerales }) => {
@@ -89,25 +91,43 @@ const DashboardCharts = ({ tramites, secretarias, estadisticasGenerales }) => {
     // Datos para gráfico de avance de trámites
     const camposEtapas = [
       'capacitacion_modulo1',
-      'capacitacion_modulo2',
-      'boceto_modelado',
-      'capacitacion_modulo3',
       'bizagi_modelado',
-      'acciones_reingenieria',
+      'vo_bo_bizagi',
+      'capacitacion_modulo2',
+      'vo_bo_acciones_reingenieria',
+      'Modulo3',
       'boceto_acuerdo',
+      'vo_bo_acuerdo',
       'publicado'
     ];
     
+    // Etiquetas simplificadas sin prefijo de fase
     const etiquetasEtapas = [
-      'Capacitación 1',
-      'Capacitación 2',
-      'Boceto Modelado',
-      'Capacitación 3',
+      'Capacitaciones',
       'Bizagi Modelado',
-      'Acciones Reingeniería',
-      'Boceto Acuerdo',
-      'Publicado'
+      'VoBo Bizagi',
+      'Capacitaciones',
+      'VoBo Acciones de Reingeniería',
+      'Nuevo Proceso',
+      'VoBo Nuevo Proceso',
+      'Publicación del acuerdo',
+      'Implementación'
     ];
+    
+    // Definir a qué fase pertenece cada etapa (1-5)
+    const fasesEtapas = [1, 1, 1, 2, 2, 3, 3, 4, 5];
+    
+    // Colores por fase (un color distinto para cada fase)
+    const coloresPorFase = {
+      1: '#4e73df', // Azul para Fase 1
+      2: '#1cc88a', // Verde para Fase 2
+      3: '#f6c23e', // Amarillo para Fase 3
+      4: '#e74a3b', // Rojo para Fase 4
+      5: '#6f42c1'  // Morado para Fase 5
+    };
+    
+    // Crear array de colores basado en la fase de cada etapa
+    const coloresEtapas = fasesEtapas.map(fase => coloresPorFase[fase]);
     
     // Usamos las etapas reales de la base de datos
     const etapasAvance = etiquetasEtapas;
@@ -127,7 +147,10 @@ const DashboardCharts = ({ tramites, secretarias, estadisticasGenerales }) => {
     
     // Calcular niveles de digitalización
     tramites.forEach(tramite => {
-      const nivel = Math.round(parseFloat(tramite.nivel_digitalizacion || 0));
+      const nivelExacto = parseFloat(tramite.nivel_digitalizacion || 0);
+      // Usamos Math.floor para asegurar que solo nivel 4.0 o mayor se cuente como nivel 4
+      // Los valores entre 3.1 y 3.9 se cuentan como nivel 3
+      const nivel = Math.min(Math.floor(nivelExacto), 4);
       if (nivel >= 0 && nivel <= 4) {
         conteoNivelesDigitalizacion[nivel]++;
       }
@@ -151,15 +174,15 @@ const DashboardCharts = ({ tramites, secretarias, estadisticasGenerales }) => {
 
     // Datos para el gráfico de radar de avance general
     const datosRadarAvance = {
-      labels: ['Trámites Registrados', 'Trámites en Proceso', 'Nivel Digitalización', 'Secretarías Participantes', 'Avance Simplificación'],
+      labels: ['Trámites Registrados', 'Trámites en Proceso de Simplificación', 'Secretarías Participantes', 'Nivel Digitalización', 'Avance Simplificación'],
       datasets: [
         {
           label: 'Estado Actual',
           data: [
-            tramites.length / 229 * 100, // Porcentaje de trámites registrados del total estatal
-            tramites.filter(t => !t.publicado).length / 229 * 100, // Porcentaje de trámites en proceso del total estatal
+            tramites.length / 249 * 100, // Porcentaje de trámites registrados del total estatal
+            tramites.filter(t => !t.publicado).length / 249 * 100, // Porcentaje de trámites en proceso del total estatal
+            estadisticasGenerales?.secretariasActivas / 12 * 100 || 0, // Porcentaje de secretarías activas del total (12)
             estadisticasGenerales?.nivelDigitalizacionPromedio / 4 * 100 || 0, // Porcentaje de nivel digitalización
-            estadisticasGenerales?.secretariasActivas / 17 * 100 || 0, // Porcentaje de secretarías activas del total (17)
             // Usar el nuevo cálculo de porcentaje de avance de simplificación
             // Este cálculo considera el avance individual de cada trámite con ponderación
             tramites.reduce((sum, t) => {
@@ -176,7 +199,7 @@ const DashboardCharts = ({ tramites, secretarias, estadisticasGenerales }) => {
               if (t.publicado) puntosTramite += 1;
               
               return sum + puntosTramite;
-            }, 0) / (229 * 7) * 100 // Porcentaje de avance ponderado sobre el total estatal
+            }, 0) / (249 * 7) * 100 // Porcentaje de avance ponderado sobre el total estatal
           ],
           backgroundColor: `${coloresFondo[0]}50`,
           borderColor: coloresInstitucionales[0],
@@ -210,7 +233,10 @@ const DashboardCharts = ({ tramites, secretarias, estadisticasGenerales }) => {
         labels: {
           font: {
             size: 12
-          }
+          },
+          // Usar las etiquetas originales sin modificación
+          usePointStyle: true,
+          boxWidth: 15
         }
       },
       title: {
@@ -225,6 +251,36 @@ const DashboardCharts = ({ tramites, secretarias, estadisticasGenerales }) => {
           bottom: 20
         }
       },
+      // Agregar porcentajes dentro del gráfico
+      datalabels: {
+        formatter: (value, ctx) => {
+          const dataset = ctx.chart.data.datasets[0];
+          const total = dataset.data.reduce((sum, val) => sum + val, 0);
+          const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+          return percentage > 5 ? `${percentage}%` : '';
+        },
+        color: '#fff',
+        font: {
+          weight: 'bold',
+          size: 14
+        },
+        textStrokeColor: '#000',
+        textStrokeWidth: 0.5,
+        display: true,
+        align: 'center',
+        anchor: 'center'
+      },
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            const dataset = context.dataset;
+            const total = dataset.data.reduce((sum, val) => sum + val, 0);
+            const value = dataset.data[context.dataIndex];
+            const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+            return `${context.label}: ${value} (${percentage}%)`;
+          }
+        }
+      }
     },
   };
   
@@ -237,16 +293,18 @@ const DashboardCharts = ({ tramites, secretarias, estadisticasGenerales }) => {
           display: true,
           color: COLORS.lightGray
         },
+        beginAtZero: true,
         suggestedMin: 0,
         suggestedMax: 100,
         ticks: {
-          stepSize: 20,
-          backdropColor: 'rgba(255, 255, 255, 0.7)',
-          font: {
-            size: 11,
-            weight: 'bold'
-          },
-          color: COLORS.darkGray
+          display: false,  // Ocultar los valores numéricos
+          backdropColor: 'transparent',
+          z: -1
+        },
+        grid: {
+          display: true,  // Mostrar las líneas de la cuadrícula
+          circular: false,  // Forma de pentágono en lugar de círculos
+          color: 'rgba(0, 0, 0, 0.1)'
         },
         pointLabels: {
           font: {
@@ -254,13 +312,18 @@ const DashboardCharts = ({ tramites, secretarias, estadisticasGenerales }) => {
             weight: 'bold'
           },
           color: COLORS.darkGray
-        },
-        grid: {
-          color: 'rgba(0, 0, 0, 0.1)'
         }
       }
     },
+    elements: {
+      line: {
+        borderWidth: 3
+      }
+    },
     plugins: {
+      datalabels: {
+        display: false  // Desactivar completamente las etiquetas de datos para este gráfico
+      },
       legend: {
         display: false
       },

@@ -7,13 +7,11 @@ const PipelineStepsEvidence = ({ tramite = {} }) => {
   // Descripciones detalladas para tooltips
   const descripcionesPasos = {
     capacitacion_modulo1: 'Capacitación presencial sobre la estrategia de simplificación de trámites, principios de simplificación y alineación con la estrategia nacional.',
-    capacitacion_modulo2: 'Capacitación presencial "Diseño y Análisis de un diagrama de Flujo Gubernamental" para aplicar fundamentos de diagramas de flujo horizontal.',
-    boceto_modelado: 'Elaboración del boceto inicial del modelado del trámite por parte del enlace de la secretaría.',
-    capacitacion_modulo3: 'Capacitación sobre implementación de mejoras y seguimiento de resultados.',
     bizagi_modelado: 'Modelado del trámite utilizando el software Bizagi para representar el flujo actual.',
     vo_bo_bizagi: 'Visto bueno por parte de COEMERE al modelado Bizagi presentado por la secretaría.',
-    acciones_reingenieria: 'Propuesta de acciones de reingeniería por parte de COEMERE para simplificar el trámite.',
+    capacitacion_modulo2: 'Capacitación presencial "Diseño y Análisis de un diagrama de Flujo Gubernamental" para aplicar fundamentos de diagramas de flujo horizontal.',
     vo_bo_acciones_reingenieria: 'Visto bueno por parte del enlace de la secretaría a las acciones de reingeniería propuestas.',
+    capacitacion_modulo3: 'Capacitación sobre implementación de mejoras y seguimiento de resultados.',
     boceto_acuerdo: 'Elaboración del boceto del acuerdo entre COEMERE y la Secretaría para formalizar las mejoras.',
     vo_bo_acuerdo: 'Visto bueno por parte de COEMERE al acuerdo propuesto.',
     publicado: 'Publicación oficial de la simplificación del trámite en el Periódico Oficial del Estado de Hidalgo.'
@@ -22,95 +20,124 @@ const PipelineStepsEvidence = ({ tramite = {} }) => {
   // Asegurar que tramite no sea null o undefined
   const tramiteData = tramite || {};
   
-  // Definición de los 11 pasos según requerimiento con campo para evidencia
+  // Colores por fase (un color distinto para cada fase)
+  const coloresPorFase = {
+    1: '#4e73df', // Azul para Fase 1
+    2: '#1cc88a', // Verde para Fase 2
+    3: '#f6c23e', // Amarillo para Fase 3
+    4: '#e74a3b', // Rojo para Fase 4
+    5: '#6f42c1'  // Morado para Fase 5
+  };
+  
+  // Nombres de las fases para la leyenda
+  const nombresFases = {
+    1: 'Fase 1: Modelado',
+    2: 'Fase 2: Reingeniería',
+    3: 'Fase 3: Proceso',
+    4: 'Fase 4: Publicación',
+    5: 'Fase 5: Implementación'
+  };
+
+  // Definición de los pasos según requerimiento con campo para evidencia, agrupados por fases
   const pasos = [
+    // Fase 1: Modelado (Azul)
     { 
       id: 1,
       campo: 'capacitacion_modulo1', 
-      titulo: 'Capacitación 1',
+      titulo: 'Capacitaciones',
+      fase: 1,
       completado: tramiteData.capacitacion_modulo1 === true,
       tooltip: descripcionesPasos.capacitacion_modulo1,
-      evidencia: tramiteData.evidencia_capacitacion_modulo1 || null
+      evidencia: tramiteData.evidencia_capacitacion_modulo1 || null,
+      color: coloresPorFase[1]
     },
     { 
       id: 2,
-      campo: 'capacitacion_modulo2', 
-      titulo: 'Capacitación 2',
-      completado: tramiteData.capacitacion_modulo2 === true,
-      tooltip: descripcionesPasos.capacitacion_modulo2,
-      evidencia: tramiteData.evidencia_capacitacion_modulo2 || null
+      campo: 'bizagi_modelado', 
+      titulo: 'Bizagi Modelado',
+      fase: 1,
+      completado: tramiteData.bizagi_modelado === true,
+      tooltip: descripcionesPasos.bizagi_modelado,
+      evidencia: tramiteData.evidencia_bizagi_modelado || null,
+      color: coloresPorFase[1]
     },
     { 
       id: 3,
-      campo: 'boceto_modelado', 
-      titulo: 'Boceto Modelado',
-      completado: tramiteData.boceto_modelado === true,
-      tooltip: descripcionesPasos.boceto_modelado,
-      evidencia: tramiteData.evidencia_boceto_modelado || null
+      campo: 'vo_bo_bizagi', 
+      titulo: 'VoBo Bizagi',
+      fase: 1,
+      completado: tramiteData.vo_bo_bizagi === true,
+      tooltip: descripcionesPasos.vo_bo_bizagi,
+      evidencia: tramiteData.evidencia_vo_bo_bizagi || null,
+      color: coloresPorFase[1]
     },
+    
+    // Fase 2: Reingeniería (Verde)
     { 
       id: 4,
-      campo: 'capacitacion_modulo3', 
-      titulo: 'Capacitación 3',
-      completado: tramiteData.capacitacion_modulo3 === true,
-      tooltip: descripcionesPasos.capacitacion_modulo3,
-      evidencia: tramiteData.evidencia_capacitacion_modulo3 || null
+      campo: 'capacitacion_modulo2', 
+      titulo: 'Capacitaciones',
+      fase: 2,
+      completado: tramiteData.capacitacion_modulo2 === true,
+      tooltip: descripcionesPasos.capacitacion_modulo2,
+      evidencia: tramiteData.evidencia_capacitacion_modulo2 || null,
+      color: coloresPorFase[2]
     },
     { 
       id: 5,
-      campo: 'bizagi_modelado', 
-      titulo: 'Modelado Bizagi',
-      completado: tramiteData.bizagi_modelado === true,
-      tooltip: descripcionesPasos.bizagi_modelado,
-      evidencia: tramiteData.evidencia_bizagi_modelado || null
+      campo: 'vo_bo_acciones_reingenieria', 
+      titulo: 'VoBo Acciones de Reingeniería',
+      fase: 2,
+      completado: tramiteData.vo_bo_acciones_reingenieria === true,
+      tooltip: descripcionesPasos.vo_bo_acciones_reingenieria,
+      evidencia: tramiteData.evidencia_vo_bo_acciones_reingenieria || null,
+      color: coloresPorFase[2]
     },
+    
+    // Fase 3: Proceso (Amarillo)
     { 
       id: 6,
-      campo: 'vo_bo_bizagi', 
-      titulo: 'VoBo Bizagi',
-      completado: tramiteData.vo_bo_bizagi === true,
-      tooltip: descripcionesPasos.vo_bo_bizagi,
-      evidencia: tramiteData.evidencia_vo_bo_bizagi || null
+      campo: 'capacitacion_modulo3', 
+      titulo: 'Nuevo Proceso',
+      fase: 3,
+      completado: tramiteData.capacitacion_modulo3 === true,
+      tooltip: descripcionesPasos.capacitacion_modulo3,
+      evidencia: tramiteData.evidencia_capacitacion_modulo3 || null,
+      color: coloresPorFase[3]
     },
     { 
       id: 7,
-      campo: 'acciones_reingenieria', 
-      titulo: 'Reingeniería',
-      completado: tramiteData.acciones_reingenieria === true,
-      tooltip: descripcionesPasos.acciones_reingenieria,
-      evidencia: tramiteData.evidencia_acciones_reingenieria || null
-    },
-    { 
-      id: 8,
-      campo: 'vo_bo_acciones_reingenieria', 
-      titulo: 'VoBo Reingeniería',
-      completado: tramiteData.vo_bo_acciones_reingenieria === true,
-      tooltip: descripcionesPasos.vo_bo_acciones_reingenieria,
-      evidencia: tramiteData.evidencia_vo_bo_acciones_reingenieria || null
-    },
-    { 
-      id: 9,
       campo: 'boceto_acuerdo', 
-      titulo: 'Boceto Acuerdo',
+      titulo: 'VoBo Nuevo Proceso',
+      fase: 3,
       completado: tramiteData.boceto_acuerdo === true,
       tooltip: descripcionesPasos.boceto_acuerdo,
-      evidencia: tramiteData.evidencia_boceto_acuerdo || null
+      evidencia: tramiteData.evidencia_boceto_acuerdo || null,
+      color: coloresPorFase[3]
     },
+    
+    // Fase 4: Publicación (Rojo)
     { 
-      id: 10,
+      id: 8,
       campo: 'vo_bo_acuerdo', 
-      titulo: 'VoBo Acuerdo',
+      titulo: 'Publicación del acuerdo',
+      fase: 4,
       completado: tramiteData.vo_bo_acuerdo === true,
       tooltip: descripcionesPasos.vo_bo_acuerdo,
-      evidencia: tramiteData.evidencia_vo_bo_acuerdo || null
+      evidencia: tramiteData.evidencia_vo_bo_acuerdo || null,
+      color: coloresPorFase[4]
     },
+    
+    // Fase 5: Implementación (Morado)
     { 
-      id: 11,
+      id: 9,
       campo: 'publicado', 
-      titulo: 'Publicado',
+      titulo: 'Implementación',
+      fase: 5,
       completado: tramiteData.publicado === true,
       tooltip: descripcionesPasos.publicado,
-      evidencia: tramiteData.evidencia_publicado || null
+      evidencia: tramiteData.evidencia_publicado || null,
+      color: coloresPorFase[5]
     }
   ];
   
@@ -140,8 +167,9 @@ const PipelineStepsEvidence = ({ tramite = {} }) => {
       >
         <div 
           className={`w-9 h-9 rounded-full flex items-center justify-center 
-            ${paso.completado ? (tieneEvidencia ? 'bg-blue-500 cursor-pointer hover:bg-blue-600' : 'bg-green-500') : 'bg-gray-300'} 
-            ${paso.id < 11 ? 'mb-2' : ''} transition-colors duration-300 ease-in-out`}
+            ${paso.completado ? (tieneEvidencia ? 'cursor-pointer hover:opacity-80' : '') : 'bg-opacity-40'} 
+            transition-colors duration-300 ease-in-out`}
+          style={{ backgroundColor: paso.completado ? paso.color : '#9CA3AF' }}
           onClick={() => tieneEvidencia && toggleEvidencia(paso.id)}
           title={tieneEvidencia ? "Ver evidencia" : (paso.completado ? "Completado" : "Pendiente")}
         >
@@ -175,6 +203,23 @@ const PipelineStepsEvidence = ({ tramite = {} }) => {
         <div className="text-xs text-center mt-1 font-medium text-gray-600">
           {paso.titulo}
         </div>
+      </div>
+    );
+  };
+  
+  // Renderizar leyenda de fases
+  const renderLeyenda = () => {
+    return (
+      <div className="flex flex-wrap justify-center gap-4 mt-4 mb-2">
+        {Object.entries(nombresFases).map(([fase, nombre]) => (
+          <div key={fase} className="flex items-center">
+            <div 
+              className="w-4 h-4 rounded-full mr-1" 
+              style={{ backgroundColor: coloresPorFase[fase] }}
+            ></div>
+            <span className="text-xs text-gray-600">{nombre}</span>
+          </div>
+        ))}
       </div>
     );
   };
@@ -247,6 +292,8 @@ const PipelineStepsEvidence = ({ tramite = {} }) => {
     );
   };
 
+  // Ya tenemos calculado el progreso arriba
+  
   return (
     <div className="mt-4">
       {/* Barra de progreso */}
@@ -263,25 +310,12 @@ const PipelineStepsEvidence = ({ tramite = {} }) => {
         </div>
       </div>
       
-      {/* Pipeline de pasos */}
-      <div className="flex flex-wrap gap-2 justify-center items-center py-4">
-        {pasos.map(renderPaso)}
-      </div>
+      {/* Leyenda de fases */}
+      {renderLeyenda()}
       
-      {/* Leyenda */}
-      <div className="mt-4 flex flex-wrap gap-4 justify-center text-xs text-gray-600">
-        <div className="flex items-center">
-          <div className="w-3 h-3 rounded-full bg-gray-300 mr-1"></div>
-          <span>Pendiente</span>
-        </div>
-        <div className="flex items-center">
-          <div className="w-3 h-3 rounded-full bg-green-500 mr-1"></div>
-          <span>Completado</span>
-        </div>
-        <div className="flex items-center">
-          <div className="w-3 h-3 rounded-full bg-blue-500 mr-1"></div>
-          <span>Con evidencia</span>
-        </div>
+      {/* Pipeline de pasos */}
+      <div className="flex flex-wrap gap-4 justify-center items-center py-4">
+        {pasos.map(paso => renderPaso(paso))}
       </div>
       
       {/* Modal de evidencia */}
