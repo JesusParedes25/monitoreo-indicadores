@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title, RadialLinearScale, PointElement, LineElement, Filler } from 'chart.js';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
-import { Doughnut, Radar } from 'react-chartjs-2';
+import { Doughnut, Bar } from 'react-chartjs-2';
 import { COLORS } from '../../styles/colors';
 import FlowDiagram from './FlowDiagram';
 import SecretariaDetail from './SecretariaDetail';
@@ -172,43 +172,54 @@ const DashboardCharts = ({ tramites, secretarias, estadisticasGenerales }) => {
       }]
     };
 
-    // Datos para el gráfico de radar de avance general
-    const datosRadarAvance = {
-      labels: ['Trámites Registrados', 'Trámites en Proceso de Simplificación', 'Secretarías Participantes', 'Nivel Digitalización', 'Avance Simplificación'],
+    // Datos para el gráfico de barras de secretarías con trámites en proceso (ordenados de mayor a menor)
+    // Primero, creamos un array de objetos con los datos de cada secretaría
+    const datosTramitesProceso = secretarias.map(s => {
+      const cantidadTramites = tramites.filter(t => t.secretaria_id === s.id && !t.publicado).length;
+      return {
+        // Usar el nombre completo para que se muestre en el gráfico
+        nombre: s.nombre,
+        cantidadTramites: cantidadTramites,
+        secretariaId: s.id
+      };
+    });
+    
+    // Ordenamos de mayor a menor cantidad de trámites
+    datosTramitesProceso.sort((a, b) => b.cantidadTramites - a.cantidadTramites);
+    
+    // Definimos una escala de colores para resaltar la cantidad de trámites
+    // Usamos #9f2241 como color base con diferentes niveles de transparencia
+    const getColorByValue = (value, max) => {
+      // Si no hay trámites, usar un color gris
+      if (value === 0) return 'rgba(200, 200, 200, 0.7)';
+      
+      // Calculamos un valor entre 0 y 1
+      const ratio = value / max;
+      
+      // A mayor cantidad de trámites, menor transparencia (más opaco)
+      if (ratio > 0.75) return 'rgba(159, 34, 65, 1.0)'; // 100% opacidad para los más altos
+      if (ratio > 0.5) return 'rgba(159, 34, 65, 0.75)'; // 75% opacidad 
+      if (ratio > 0.25) return 'rgba(159, 34, 65, 0.5)'; // 50% opacidad
+      return 'rgba(159, 34, 65, 0.25)'; // 25% opacidad para los más bajos
+    };
+    
+    // Obtenemos el máximo valor para normalizar
+    const maxTramites = Math.max(...datosTramitesProceso.map(d => d.cantidadTramites));
+    
+    // Creamos el objeto de datos ordenado
+    const datosSecretariasTramitesProceso = {
+      labels: datosTramitesProceso.map(d => d.nombre),
       datasets: [
         {
-          label: 'Estado Actual',
-          data: [
-            tramites.length / 249 * 100, // Porcentaje de trámites registrados del total estatal
-            tramites.filter(t => !t.publicado).length / 249 * 100, // Porcentaje de trámites en proceso del total estatal
-            estadisticasGenerales?.secretariasActivas / 12 * 100 || 0, // Porcentaje de secretarías activas del total (12)
-            estadisticasGenerales?.nivelDigitalizacionPromedio / 4 * 100 || 0, // Porcentaje de nivel digitalización
-            // Usar el nuevo cálculo de porcentaje de avance de simplificación
-            // Este cálculo considera el avance individual de cada trámite con ponderación
-            tramites.reduce((sum, t) => {
-              // Contar puntos acumulados para este trámite
-              let puntosTramite = 0;
-              
-              // Pasos 1-6 (valor 0.5 cada uno)
-              if (t.capacitacion_modulo1) puntosTramite += 0.5;
-              if (t.boceto_modelado) puntosTramite += 0.5;
-              if (t.bizagi_modelado) puntosTramite += 0.5;
-              if (t.acciones_reingenieria) puntosTramite += 0.5;
-              if (t.capacitacion_modulo2) puntosTramite += 0.5;
-              if (t.boceto_acuerdo) puntosTramite += 0.5;
-              if (t.publicado) puntosTramite += 1;
-              
-              return sum + puntosTramite;
-            }, 0) / (249 * 7) * 100 // Porcentaje de avance ponderado sobre el total estatal
-          ],
-          backgroundColor: `${coloresFondo[0]}50`,
-          borderColor: coloresInstitucionales[0],
-          borderWidth: 2,
-          pointBackgroundColor: coloresInstitucionales[0],
-          pointBorderColor: '#fff',
-          pointHoverBackgroundColor: '#fff',
-          pointHoverBorderColor: coloresInstitucionales[0],
-          fill: true
+          label: 'Trámites en Proceso',
+          data: datosTramitesProceso.map(d => d.cantidadTramites),
+          backgroundColor: datosTramitesProceso.map(d => getColorByValue(d.cantidadTramites, maxTramites)),
+          borderColor: datosTramitesProceso.map(d => {
+            return 'rgb(159, 34, 65)'; // Usar el mismo color #9f2241 para todos los bordes
+          }),
+          borderWidth: 1,
+          barThickness: 25,
+          maxBarThickness: 35,
         }
       ],
     };
@@ -218,11 +229,11 @@ const DashboardCharts = ({ tramites, secretarias, estadisticasGenerales }) => {
       etapasAvance,
       conteoEtapas,
       datosNivelDigitalizacion,
-      datosRadarAvance
+      datosSecretariasTramitesProceso
     };
   };
 
-  const { etapasAvance, conteoEtapas, datosNivelDigitalizacion, datosRadarAvance } = prepararDatosGraficos();
+  const { etapasAvance, conteoEtapas, datosNivelDigitalizacion, datosSecretariasTramitesProceso } = prepararDatosGraficos();
 
   const opcionesDoughnut = {
     responsive: true,
@@ -284,52 +295,86 @@ const DashboardCharts = ({ tramites, secretarias, estadisticasGenerales }) => {
     },
   };
   
-  const opcionesRadar = {
+  const opcionesBarras = {
     responsive: true,
     maintainAspectRatio: false,
+    indexAxis: 'y', // Para barras horizontales
     scales: {
-      r: {
-        angleLines: {
-          display: true,
-          color: COLORS.lightGray
-        },
-        beginAtZero: true,
-        suggestedMin: 0,
-        suggestedMax: 100,
+      y: {
         ticks: {
-          display: false,  // Ocultar los valores numéricos
-          backdropColor: 'transparent',
-          z: -1
-        },
-        grid: {
-          display: true,  // Mostrar las líneas de la cuadrícula
-          circular: false,  // Forma de pentágono en lugar de círculos
-          color: 'rgba(0, 0, 0, 0.1)'
-        },
-        pointLabels: {
+          autoSkip: false,
+          // Asegurar que las etiquetas se muestren completas
+          maxRotation: 0,
+          minRotation: 0,
+          // Ajustar el callback para mostrar los nombres de manera más legible
+          callback: function(value, index) {
+            const label = this.getLabelForValue(value);
+            // Dividir nombres largos en dos líneas si es necesario
+            if (label && label.length > 20) {
+              const words = label.split(' ');
+              let firstLine = '';
+              let secondLine = '';
+              let currentLine = firstLine;
+              
+              words.forEach(word => {
+                if (currentLine === firstLine && firstLine.length + word.length > 20) {
+                  currentLine = secondLine;
+                }
+                currentLine += (currentLine ? ' ' : '') + word;
+              });
+              
+              if (secondLine) {
+                return [firstLine, secondLine];
+              }
+              return label;
+            }
+            return label;
+          },
           font: {
-            size: 12,
+            size: 10,
             weight: 'bold'
           },
           color: COLORS.darkGray
+        },
+        grid: {
+          display: false
         }
-      }
-    },
-    elements: {
-      line: {
-        borderWidth: 3
+      },
+      x: {
+        beginAtZero: true,
+        ticks: {
+          precision: 0 // Solo mostrar números enteros
+        },
+        grid: {
+          color: 'rgba(0, 0, 0, 0.1)'
+        },
+        title: {
+          display: true,
+          text: 'Cantidad de trámites',
+          font: {
+            size: 12
+          }
+        }
       }
     },
     plugins: {
       datalabels: {
-        display: false  // Desactivar completamente las etiquetas de datos para este gráfico
+        display: true,
+        align: 'end',
+        anchor: 'end',
+        formatter: function(value) {
+          return value;
+        },
+        font: {
+          weight: 'bold'
+        }
       },
       legend: {
         display: false
       },
       title: {
         display: true,
-        text: 'Avance General (%)',
+        text: 'Trámites en proceso de simplificación',
         font: {
           size: 16,
           weight: 'bold'
@@ -359,14 +404,13 @@ const DashboardCharts = ({ tramites, secretarias, estadisticasGenerales }) => {
         </h2>
         
         <div className="flex flex-wrap gap-6">
-          {/* Gráfico de Radar - Avance General */}
+          {/* Gráfico de Barras - Trámites en Proceso por Secretaría */}
           <div className="flex-1 min-w-[450px] bg-white rounded-lg shadow-md p-4 border" style={{ borderColor: COLORS.mediumGray }}>
-            <div className="h-[350px]">
-              <Radar data={datosRadarAvance} options={opcionesRadar} />
+            <div className="h-[450px]">
+              <Bar data={datosSecretariasTramitesProceso} options={opcionesBarras} />
             </div>
             <p className="text-sm text-gray-600 mt-3 text-center">
-              Este gráfico muestra el avance porcentual en 5 dimensiones clave del proceso de simplificación.
-              Las áreas con menor cobertura representan oportunidades de mejora prioritarias.
+              Cantidad de trámites en proceso de simplificación por secretaría.
             </p>
           </div>
           
