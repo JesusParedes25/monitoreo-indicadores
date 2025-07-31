@@ -7,9 +7,9 @@ services:
     container_name: observatorio_postgres
     restart: always
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: Gob13rnoDB$
-      POSTGRES_DB: observatorio_regulatorio
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-observatorio_regulatorio}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./postgres-init:/docker-entrypoint-initdb.d
@@ -26,7 +26,7 @@ services:
     depends_on:
       - postgres
     environment:
-      DATABASE_URL: postgresql://postgres:Gob13rnoDB$@postgres:5432/observatorio_regulatorio
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-observatorio_regulatorio}
       NODE_ENV: production
       PORT: 3000
     networks:
@@ -43,6 +43,9 @@ services:
       - backend
     ports:
       - "80:80"
+      - "443:443"
+    volumes:
+      - ./ssl:/etc/nginx/ssl:ro
     networks:
       - observatorio_network
 

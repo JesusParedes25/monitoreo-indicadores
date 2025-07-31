@@ -18,6 +18,25 @@ dist-ssr
 .idea
 .DS_Store
 *.suo
+
+# Environment variables
+.env
+.env.local
+.env.production.local
+
+# SSL certificates
+ssl/
+*.pem
+*.key
+*.crt
+
+# Database
+*.sql
+*.db
+*.sqlite
+
+# Production files
+docker-compose.override.yml
 *.ntvs*
 *.njsproj
 *.sln

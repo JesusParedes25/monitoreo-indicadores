@@ -17,8 +17,8 @@ COPY public ./public
 COPY vite.config.js* ./
 COPY tailwind.config.js* ./
 
-# Configurar la URL del backend
-RUN echo "VITE_API_URL=http://srv885729.hstgr.cloud/api" > .env.production
+# Configurar la URL del backend para HTTPS
+RUN echo "VITE_API_URL=https://srv885729.hstgr.cloud/api" > .env.production
 
 # Instalar dependencias y construir
 RUN npm install --legacy-peer-deps
