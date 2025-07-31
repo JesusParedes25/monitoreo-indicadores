@@ -87,93 +87,80 @@ export default function MapaMunicipios() {
   // Cargar datos de municipios con geometrías desde el backend
   useEffect(() => {
     const fetchData = async () => {
+    try {
+      setIsLoading(true);
+      setError(null); // Limpiar errores previos
+      
+      // Usar la variable de entorno para la URL de la API
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const url = `${apiUrl}/municipios`;
+      
       try {
-        setIsLoading(true);
-        setError(null); // Limpiar errores previos
+        console.log(`Intentando conectar con: ${url}`);
+        const response = await axios.get(url, {
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+          withCredentials: false,
+          timeout: 10000 // Aumentar timeout a 10 segundos
+        });
         
-        // Lista de posibles URLs para probar
-        const urlsToTry = [
-          'http://localhost:5000/api/municipios',
-          'http://127.0.0.1:5000/api/municipios',
-        ];
-        
-        let success = false;
-        let lastError = null;
-        
-        // Intentar cada URL hasta que una funcione
-        for (const url of urlsToTry) {
-          try {
-            console.log(`Intentando conectar con: ${url}`);
-            const response = await axios.get(url, {
-              headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-              },
-              withCredentials: false,
-              timeout: 5000 // Timeout de 5 segundos
-            });
-            
-            if (response.data) {
-              setGeoJsonData(response.data);
-              console.log('Datos cargados correctamente:', response.data);
-              success = true;
-              break; // Salir del bucle si la conexión fue exitosa
-            }
-          } catch (err) {
-            console.warn(`Error al conectar con ${url}:`, err.message);
-            lastError = err;
-          }
+        if (response.data) {
+          setGeoJsonData(response.data);
+          console.log('Datos cargados correctamente:', response.data);
+          setIsLoading(false);
+          return;
         }
+      } catch (err) {
+        console.error(`Error al conectar con ${url}:`, err.message);
         
-        if (!success) {
-          console.warn('Todos los intentos de conexión fallaron. Usando datos de demostración.');
-          
-          // Crear datos de demostración si el backend falla
-          const demoData = {
-            type: 'FeatureCollection',
-            features: [
-              {
-                type: 'Feature',
-                geometry: {
-                  type: 'Polygon',
-                  coordinates: [[[-98.76, 20.09], [-98.74, 20.09], [-98.74, 20.11], [-98.76, 20.11], [-98.76, 20.09]]]
-                },
-                properties: {
-                  id: 1,
-                  municipio: 'Pachuca (Demo)',
-                  enlace: true,
-                  pamr: false,
-                  cnartys: true
-                }
+        // Crear datos de demostración si el backend falla
+        const demoData = {
+          type: 'FeatureCollection',
+          features: [
+            {
+              type: 'Feature',
+              geometry: {
+                type: 'Polygon',
+                coordinates: [[[-98.76, 20.09], [-98.74, 20.09], [-98.74, 20.11], [-98.76, 20.11], [-98.76, 20.09]]]
               },
-              {
-                type: 'Feature',
-                geometry: {
-                  type: 'Polygon',
-                  coordinates: [[[-98.78, 20.07], [-98.76, 20.07], [-98.76, 20.09], [-98.78, 20.09], [-98.78, 20.07]]]
-                },
-                properties: {
-                  id: 2,
-                  municipio: 'Mineral de la Reforma (Demo)',
-                  enlace: true,
-                  pamr: true,
-                  cnartys: false
-                }
+              properties: {
+                id: 1,
+                municipio: 'Pachuca (Demo)',
+                enlace: true,
+                pamr: false,
+                cnartys: true
               }
-            ]
-          };
-          
-          setGeoJsonData(demoData);
-          setError('No se pudo conectar con el servidor. Mostrando datos de demostración.');
-        }
+            },
+            {
+              type: 'Feature',
+              geometry: {
+                type: 'Polygon',
+                coordinates: [[[-98.78, 20.07], [-98.76, 20.07], [-98.76, 20.09], [-98.78, 20.09], [-98.78, 20.07]]]
+              },
+              properties: {
+                id: 2,
+                municipio: 'Mineral de la Reforma (Demo)',
+                enlace: true,
+                pamr: true,
+                cnartys: false
+              }
+            }
+          ]
+        };
         
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Error general:', error);
-        setError(`Error: ${error.message}`);
-        setIsLoading(false);
+        setGeoJsonData(demoData);
+        setError('No se pudo conectar con el servidor. Mostrando datos de demostración.');
       }
-    };
+      
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Error general:', error);
+      setError(`Error: ${error.message}`);
+      setIsLoading(false);
+    }
+  };
     
     fetchData();
   }, []);
