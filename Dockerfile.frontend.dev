@@ -1,0 +1,42 @@
+# Usar una imagen base de nginx directamente
+FROM nginx:alpine
+
+# Crear directorio temporal para construcción
+WORKDIR /tmp
+
+# Instalar Node.js en la imagen nginx
+RUN apk add --no-cache nodejs npm
+
+# Copiar archivos del proyecto
+COPY package*.json ./
+COPY index.html ./
+COPY src ./src
+COPY public ./public
+
+# Copiar archivos de configuración si existen
+COPY vite.config.js* ./
+COPY tailwind.config.js* ./
+COPY postcss.config.* ./
+
+# Configurar la URL del backend usando variable de entorno
+ARG SERVER_IP=10.16.120.25
+RUN echo "VITE_API_URL=http://${SERVER_IP}/api" > .env.production
+
+# Instalar dependencias y construir
+RUN npm install --legacy-peer-deps
+RUN npm run build
+
+# Copiar archivos construidos a nginx
+RUN cp -r dist/* /usr/share/nginx/html/
+
+# Limpiar archivos temporales
+RUN rm -rf /tmp/*
+
+# Copiar configuración de nginx para desarrollo
+COPY nginx/nginx-dev.conf /etc/nginx/conf.d/default.conf
+
+# Exponer solo puerto 80
+EXPOSE 80
+
+# Comando para ejecutar nginx
+CMD ["nginx", "-g", "daemon off;"]
