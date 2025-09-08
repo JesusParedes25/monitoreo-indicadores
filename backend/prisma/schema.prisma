@@ -22,9 +22,24 @@ model secretaria {
   indicadores_tramite indicadores_tramite_secretaria[]
 }
 
+model periodos_datos {
+  id          Int      @id @default(autoincrement())
+  mes         Int      // 1-12
+  anio        Int      // 2024, 2025, etc.
+  descripcion String?  @db.VarChar(255)
+  fecha_carga DateTime @default(now())
+  activo      Boolean  @default(true)
+  
+  // Relación con los datos de trámites
+  indicadores indicadores_tramite_secretaria[]
+  
+  @@unique([mes, anio])
+}
+
 model indicadores_tramite_secretaria {
   id                          Int        @id @default(autoincrement())
   secretaria_id               Int
+  periodo_id                  Int?       // Nuevo campo para vincular con período
   tramite                     String     @db.VarChar(255)
   nivel_digitalizacion        Float?
   capacitacion_modulo1        Boolean?
@@ -38,5 +53,12 @@ model indicadores_tramite_secretaria {
   boceto_acuerdo              Boolean?
   vo_bo_acuerdo               Boolean?
   publicado                   Boolean?
-  secretaria                  secretaria @relation(fields: [secretaria_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  fecha_creacion              DateTime   @default(now())
+  
+  // Relaciones
+  secretaria                  secretaria      @relation(fields: [secretaria_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  periodo                     periodos_datos? @relation(fields: [periodo_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  
+  // Constraint único por período, secretaría y trámite
+  @@unique([secretaria_id, tramite, periodo_id])
 }
