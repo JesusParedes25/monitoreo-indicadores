@@ -18,6 +18,9 @@ export default function Layout({ children }) {
           <Link to="/dependencias" className="btn btn-ghost btn-sm">
             Dependencias
           </Link>
+          <Link to="/admin-csv" className="btn btn-ghost btn-sm">
+            Admin CSV
+          </Link>
           <Link to="/contacto" className="btn btn-ghost btn-sm">
             Contacto
           </Link>

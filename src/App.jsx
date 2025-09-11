@@ -5,6 +5,7 @@ import HomePage from "./pages/HomePage";
 import MunicipiosPage from "./pages/MunicipiosPage";
 import DependenciasPage from "./pages/DependenciasPage";
 import ContactoPage from "./pages/ContactoPage";
+import AdminCsvPage from "./pages/AdminCsvPage";
 import "./App.css";  
 
 export default function App() {
@@ -22,6 +23,7 @@ export default function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/municipios" element={<MunicipiosPage />} />
           <Route path="/dependencias" element={<DependenciasPage />} />
+          <Route path="/admin-csv" element={<AdminCsvPage />} />
           <Route path="/contacto" element={<ContactoPage />} />
         </Routes>
       </div>
