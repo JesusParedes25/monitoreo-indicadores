@@ -677,25 +677,15 @@ app.get('/api/csv/comparar/:periodo1/:periodo2', async (req, res) => {
   try {
     const { periodo1, periodo2 } = req.params;
 
-    // Obtener información de los períodos primero
-    const [periodoInfo1, periodoInfo2] = await Promise.all([
-      prisma.periodos_datos.findUnique({
-        where: { id: parseInt(periodo1) }
-      }),
-      prisma.periodos_datos.findUnique({
-        where: { id: parseInt(periodo2) }
-      })
-    ]);
-
-    // Obtener datos de ambos períodos sin incluir la relación periodo
+    // Obtener datos de ambos períodos
     const [datos1, datos2] = await Promise.all([
       prisma.indicadores_tramite_secretaria.findMany({
         where: { periodo_id: parseInt(periodo1) },
-        include: { secretaria: true }
+        include: { secretaria: true, periodo: true }
       }),
       prisma.indicadores_tramite_secretaria.findMany({
         where: { periodo_id: parseInt(periodo2) },
-        include: { secretaria: true }
+        include: { secretaria: true, periodo: true }
       })
     ]);
 
@@ -748,8 +738,8 @@ app.get('/api/csv/comparar/:periodo1/:periodo2', async (req, res) => {
     });
 
     res.json({
-      periodo1: periodoInfo1,
-      periodo2: periodoInfo2,
+      periodo1: datos1[0]?.periodo || null,
+      periodo2: datos2[0]?.periodo || null,
       total_comparaciones: comparaciones.length,
       comparaciones: comparaciones.sort((a, b) => a.secretaria.localeCompare(b.secretaria))
     });
